@@ -1,192 +1,1088 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SHINJUKU-TEI Umeda - TripAdvisor Photo Captions</title>
-<style>f
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #f5f0eb;f
-    color: #333;
-    margin: 0;
-    padding: 20px;
-  }
-  h1 {
-    text-align: center;
-    color: #8b0000;
-    font-size: 28px;
-    margin-bottom: 8px;
-  }
-  .subtitle {
-    text-align: center;
-    color: #666;
-    font-size: 14px;
-    margin-bottom: 40px;
-  }
-  .card {
-    display: flex;
-    align-items: flex-start;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    margin-bottom: 28px;
-    overflow: hidden;
-    max-width: 960px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .card img {
-    width: 420px;
-    min-height: 260px;
-    object-fit: cover;
-    flex-shrink: 0;
-  }
-  .card-body {
-    padding: 28px 32px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  .card-body .photo-id {
-    font-size: 13px;
-    color: #999;
-    margin-bottom: 6px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-  .card-body .caption {
-    font-size: 15px;
-    line-height: 1.75;
-    color: #333;
-  }
-  @media (max-width: 700px) {
-    .card { flex-direction: column; }
-    .card img { width: 100%; min-height: auto; }
-  }
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SHINJUKU-TEI 衛生管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --brand: #C8252A; --brand-dark: #9B1A1E; --brand-light: #FFF0F0;
+  --bg: #F2F0EC; --card: #FFFFFF; --text: #1C1C1C; --text2: #5C5C5C; --text3: #9C9C9C;
+  --border: #E6E2DC; --ok: #1A8C5B; --ok-bg: #E6F7F0; --warn: #C07A08; --warn-bg: #FEF4E2;
+  --ng: #C8252A; --ng-bg: #FFF0F0; --info: #1A5FA8; --info-bg: #E8F0FF;
+  --photo: #5B4FCF; --photo-bg: #EFEDFF; --personal: #0A7A6A; --store: #C07A08;
+  --r: 14px; --sh: 0 1px 6px rgba(0,0,0,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;font-size:14px;}
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+.tb{background:var(--card);border-bottom:1px solid var(--border);padding:11px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30;}
+.tb-back{width:32px;height:32px;border:none;background:var(--bg);border-radius:8px;cursor:pointer;font-size:17px;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tb-brand{font-family:'DM Sans',sans-serif;font-weight:700;font-size:14px;}
+.tb-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.tb-info{flex:1;}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.b-red{background:var(--ng);color:#fff;} .b-ok{background:var(--ok);color:#fff;}
+.b-warn{background:var(--warn);color:#fff;} .b-gray{background:var(--border);color:var(--text3);}
+.b-photo{background:var(--photo);color:#fff;} .b-personal{background:var(--personal);color:#fff;}
+.b-store{background:var(--store);color:#fff;}
+.sa{flex:1;overflow-y:auto;padding:12px;}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:10px;overflow:hidden;}
+.card-head{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--bg);}
+.card-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.card-title{font-size:13px;font-weight:700;flex:1;}
+.card-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.card-chev{font-size:14px;color:var(--text3);transition:transform .2s;}
+.card-chev.open{transform:rotate(180deg);}
+.card-body{display:none;} .card-body.open{display:block;}
+.ci{display:flex;align-items:flex-start;padding:11px 14px;gap:11px;border-bottom:1px solid var(--bg);cursor:pointer;transition:background .12s;}
+.ci:last-child{border-bottom:none;} .ci:active{background:var(--bg);}
+.ci-box{width:22px;height:22px;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex-shrink:0;margin-top:1px;transition:all .15s;}
+.ci.chk .ci-box{background:var(--ok);border-color:var(--ok);}
+.ci-main{flex:1;} .ci-lbl{font-size:13px;line-height:1.4;} .ci-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.photo-section{padding:12px 14px;}
+.photo-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.photo-required{font-size:10px;color:var(--ng);font-weight:700;}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.photo-slot{aspect-ratio:1;border-radius:10px;border:2px dashed var(--border);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
+.photo-slot:active{border-color:var(--brand);background:var(--brand-light);}
+.photo-slot.taken{border-style:solid;border-color:var(--ok);}
+.photo-slot.uploading{border-color:var(--warn);}
+.photo-slot.ng-slot{border-color:var(--ng);}
+.ps-icon{font-size:22px;margin-bottom:4px;} .ps-name{font-size:10px;color:var(--text3);text-align:center;line-height:1.3;padding:0 4px;}
+.ps-status{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;}
+.pss-ok{background:var(--ok);color:#fff;} .pss-ng{background:var(--ng);color:#fff;} .pss-up{background:var(--warn);color:#fff;}
+.temp-row{display:flex;align-items:center;padding:9px 14px;gap:10px;border-bottom:1px solid var(--bg);}
+.temp-row:last-child{border-bottom:none;}
+.temp-lbl{flex:1;font-size:12px;line-height:1.4;} .temp-lbl-sub{font-size:10px;color:var(--text3);}
+.tinp{width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;transition:border-color .2s,background .2s;}
+.tinp:focus{border-color:var(--brand);} .tinp.ok{border-color:var(--ok);background:var(--ok-bg);color:var(--ok);} .tinp.ng{border-color:var(--ng);background:var(--ng-bg);color:var(--ng);}
+.tunit{font-size:12px;color:var(--text3);width:18px;}
+.ttable{width:100%;border-collapse:collapse;font-size:11px;}
+.ttable th{background:var(--bg);padding:5px 3px;text-align:center;font-weight:700;color:var(--text3);border-bottom:1px solid var(--border);font-size:10px;}
+.ttable td{padding:4px 2px;text-align:center;border-bottom:1px solid var(--bg);}
+.ttable .tlbl{text-align:left;padding-left:10px;font-size:11px;font-weight:600;min-width:72px;}
+.ttable input{width:42px;border:1px solid var(--border);border-radius:5px;padding:4px 2px;font-size:12px;text-align:center;font-family:'DM Sans',sans-serif;font-weight:700;outline:none;color:var(--text);}
+.note{padding:9px 12px;border-radius:9px;font-size:12px;line-height:1.6;display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;}
+.n-warn{background:var(--warn-bg);color:var(--warn);} .n-ok{background:var(--ok-bg);color:var(--ok);}
+.n-info{background:var(--info-bg);color:var(--info);} .n-photo{background:var(--photo-bg);color:var(--photo);}
+.n-ng{background:var(--ng-bg);color:var(--ng);}
+.sign-row{padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.sinp{flex:1;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:14px;font-family:'Noto Sans JP',sans-serif;color:var(--text);outline:none;}
+.sinp:focus{border-color:var(--brand);}
+.bot{padding:12px;background:var(--card);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:20;}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .15s;}
+.btn-main{background:var(--brand);color:#fff;} .btn-main:active{background:var(--brand-dark);}
+.btn-main:disabled{background:var(--border);color:var(--text3);cursor:not-allowed;}
+.btn-sub{background:transparent;color:var(--text2);border:1.5px solid var(--border);margin-top:8px;}
+.btn-photo{background:var(--photo);color:#fff;} .btn-photo:active{background:#4339A8;}
+.btn-photo:disabled{background:var(--border);color:var(--text3);cursor:not-allowed;}
+.btn-ok{background:var(--ok);color:#fff;}
+.hero{padding:22px 16px 18px;color:#fff;}
+.hero-date{font-size:11px;opacity:.7;margin-bottom:2px;} .hero-title{font-size:21px;font-weight:700;letter-spacing:-.4px;}
+.hero-store{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-top:10px;}
+.cat-tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);}
+.cat-tab{flex:1;padding:11px 2px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);border-bottom:3px solid transparent;cursor:pointer;transition:all .2s;line-height:1.3;}
+.cat-tab.active{border-bottom-color:var(--brand);color:var(--brand);}
+.prog-card{background:var(--card);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh);margin-bottom:8px;}
+.prog-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:7px;}
+.prog-track{height:5px;background:var(--border);border-radius:99px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:99px;transition:width .5s;}
+.menu-item{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:var(--r);padding:13px 14px;margin-bottom:8px;box-shadow:var(--sh);cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.menu-item:active{transform:scale(.98);}
+.menu-item.mi-done{border-color:var(--ok);} .menu-item.mi-warn{border-color:var(--warn);} .menu-item.mi-ng{border-color:var(--ng);}
+.mi-ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+.mi-title{font-size:13px;font-weight:700;} .mi-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.mi-right{margin-left:auto;font-size:17px;color:var(--text3);}
+.sec-lbl{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;padding:10px 14px 4px;}
+/* LOGIN */
+.login-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;}
+.login-logo{font-size:32px;font-weight:700;color:var(--brand);font-family:'DM Sans',sans-serif;margin-bottom:6px;}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:32px;}
+.login-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;align-self:flex-start;width:100%;}
+.login-sel{width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Noto Sans JP',sans-serif;color:var(--text);background:var(--card);outline:none;margin-bottom:14px;appearance:none;}
+.login-inp{width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:18px;font-weight:700;text-align:center;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;margin-bottom:14px;letter-spacing:6px;}
+.login-inp:focus,.login-sel:focus{border-color:var(--brand);}
+/* AI */
+.ai-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;}
+.ai-spin{width:64px;height:64px;border:4px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .9s linear infinite;margin:0 auto 18px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ai-step{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;margin-bottom:6px;font-size:13px;width:100%;transition:all .2s;}
+.as-run{background:var(--warn-bg);} .as-done{background:var(--ok-bg);color:var(--ok);} .as-pend{color:var(--text3);}
+/* RESULT */
+.res-hero{text-align:center;padding:22px 16px 14px;}
+.res-ico{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 12px;}
+.res-title{font-size:20px;font-weight:700;} .res-sub{font-size:13px;color:var(--text2);margin-top:5px;line-height:1.6;}
+.res-item{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);}
+.res-item:last-child{border-bottom:none;} .ri-txt{flex:1;font-size:13px;line-height:1.4;}
+.ri-b{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;}
+.ri-ok{background:var(--ok-bg);color:var(--ok);} .ri-warn{background:var(--warn-bg);color:var(--warn);} .ri-ng{background:var(--ng-bg);color:var(--ng);}
+/* DASH */
+.dash-stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.stat-box{background:var(--card);border-radius:var(--r);padding:12px;text-align:center;box-shadow:var(--sh);}
+.stat-num{font-size:24px;font-weight:700;font-family:'DM Sans',sans-serif;}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:2px;}
+.store-row{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:8px;overflow:hidden;}
+.sr-head{padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.sr-name{font-size:14px;font-weight:700;flex:1;} .sr-sub{font-size:11px;margin-top:2px;}
+.sr-badges{display:flex;gap:4px;}
+.sr-body{padding:10px 14px;border-top:1px solid var(--bg);display:none;}
+.sr-body.open{display:block;}
+.sr-alert{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bg);font-size:12px;}
+.sr-alert:last-child{border-bottom:none;}
+/* hidden file input */
+.file-inp{display:none;}
+/* toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1C1C1C;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
 </style>
 </head>
 <body>
 
-<h1>SHINJUKU-TEI Umeda</h1>
-<p class="subtitle">TripAdvisor Photo Captions for International Travelers</p>
+<!-- hidden file input for camera -->
+<input type="file" accept="image/*" capture="environment" class="file-inp" id="camera-input">
+<div class="toast" id="toast"></div>
 
-<!-- Photo 1 -->
-<div class="card">
-  <img src="images/1-Umeda_gbp.jpeg" alt="Photo 1">
-  <div class="card-body">
-    <div class="photo-id">1-Umeda_gbp.jpeg</div>
-    <div class="caption">Experience the art of Japanese food culture by grilling your own A5 Wagyu gyukatsu on a sizzling hot stone plate. This interactive dining experience lets you cook your steak to your desired level of perfection. A must-try for any meat lover visiting Japan!</div>
+<!-- =========================================================
+     LOGIN
+======================================================== -->
+<div class="screen active" id="s-login">
+  <div class="hero" style="background:linear-gradient(135deg,#C8252A 0%,#7B1316 100%);text-align:center;padding:40px 20px 32px">
+    <div style="font-size:28px;font-weight:700;font-family:'DM Sans',sans-serif;letter-spacing:-.5px">SHINJUKU-TEI</div>
+    <div style="font-size:14px;opacity:.8;margin-top:4px">衛生管理システム</div>
+  </div>
+  <div class="login-wrap">
+    <div class="login-label">店舗を選択</div>
+    <select class="login-sel" id="login-store">
+      <option value="">-- 店舗を選んでください --</option>
+    </select>
+    <div class="login-label">お名前（担当者）</div>
+    <input class="sinp" id="login-name" type="text" placeholder="例：田中" style="width:100%;margin-bottom:14px">
+    <button class="btn btn-main" id="login-btn" onclick="doLogin()">ログイン</button>
+    <div id="login-err" style="color:var(--ng);font-size:12px;margin-top:10px;text-align:center"></div>
   </div>
 </div>
 
-<!-- Photo 2 -->
-<div class="card">
-  <img src="images/2-Umeda_gbp.jpeg" alt="Photo 2">
-  <div class="card-body">
-    <div class="photo-id">2-Umeda_gbp.jpeg</div>
-    <div class="caption">Behold the perfect bite of A5 Wagyu gyukatsu! Crispy on the outside, incredibly tender and juicy on the inside. This is more than just a steak; it's a unique Japanese food culture experience you won't find anywhere else in Japan. Come and savor the flavor!</div>
+<!-- =========================================================
+     HOME
+======================================================== -->
+<div class="screen" id="s-home">
+  <div class="hero" style="background:linear-gradient(135deg,#C8252A 0%,#7B1316 100%)">
+    <div class="hero-date" id="hdate"></div>
+    <div class="hero-title">衛生管理報告</div>
+    <div class="hero-store" id="hero-store">📍 店舗名</div>
+  </div>
+  <div class="cat-tabs">
+    <div class="cat-tab active" id="tab-photo" onclick="switchCat('photo',this)">📸 写真報告</div>
+    <div class="cat-tab" id="tab-personal" onclick="switchCat('personal',this)">👤 個人衛生</div>
+    <div class="cat-tab" id="tab-store" onclick="switchCat('store',this)">🏪 店舗全体</div>
+    <div class="cat-tab" id="tab-dash" onclick="showScreen('s-dash');loadDashboard()">📊 管理者</div>
+  </div>
+
+  <!-- 写真報告 -->
+  <div id="cat-photo" class="sa">
+    <div class="prog-card">
+      <div class="prog-lbl"><span>写真報告 進捗</span><span id="prog-photo-lbl" style="font-weight:700;color:var(--ok)">0 / 3</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-photo" style="width:0%;background:linear-gradient(90deg,var(--photo),#8A7EF5)"></div></div>
+    </div>
+    <div class="menu-item" id="mi-open" onclick="showScreen('s-open-photo')">
+      <div class="mi-ico" style="background:var(--photo-bg)">🌅</div>
+      <div><div class="mi-title">オープン写真報告</div><div class="mi-sub">7項目撮影</div></div>
+      <div class="mi-right" id="mi-open-r">›</div>
+    </div>
+    <div class="menu-item" id="mi-close" onclick="showScreen('s-close-photo')">
+      <div class="mi-ico" style="background:#F0E8FF">🌙</div>
+      <div><div class="mi-title">クローズ写真報告</div><div class="mi-sub">9項目撮影</div></div>
+      <div class="mi-right" id="mi-close-r">›</div>
+    </div>
+    <div class="menu-item" id="mi-lowtemp" onclick="showScreen('s-lowtemp-photo')">
+      <div class="mi-ico" style="background:var(--warn-bg)">🌡️</div>
+      <div><div class="mi-title">低温調理報告</div><div class="mi-sub">温度計3本＋冷却確認</div></div>
+      <div class="mi-right" id="mi-lowtemp-r">›</div>
+    </div>
+  </div>
+
+  <!-- 個人衛生 -->
+  <div id="cat-personal" class="sa" style="display:none">
+    <div class="note n-info">ℹ️ 出勤時に毎日個人で記入してください</div>
+    <div class="prog-card">
+      <div class="prog-lbl"><span>個人衛生 進捗</span><span id="prog-personal-lbl" style="font-weight:700">0 / 2</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-personal" style="width:0%;background:linear-gradient(90deg,#0A7A6A,#2EC9A8)"></div></div>
+    </div>
+    <div class="menu-item" id="mi-grooming" onclick="showScreen('s-grooming')">
+      <div class="mi-ico" style="background:#E6F5F2">👕</div>
+      <div><div class="mi-title">身だしなみチェック</div><div class="mi-sub">制服・髪・爪・アクセサリー・香料</div></div>
+      <div class="mi-right" id="mi-grooming-r">›</div>
+    </div>
+    <div class="menu-item" id="mi-health" onclick="showScreen('s-health')">
+      <div class="mi-ico" style="background:var(--ok-bg)">🩺</div>
+      <div><div class="mi-title">健康チェック</div><div class="mi-sub">体温・症状・手洗い確認</div></div>
+      <div class="mi-right" id="mi-health-r">›</div>
+    </div>
+  </div>
+
+  <!-- 店舗全体 -->
+  <div id="cat-store" class="sa" style="display:none">
+    <div class="note n-warn">⚠️ 責任者が管理・入力してください</div>
+    <div class="prog-card">
+      <div class="prog-lbl"><span>店舗全体 進捗</span><span id="prog-store-lbl" style="font-weight:700">0 / 4</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-store" style="width:0%;background:linear-gradient(90deg,var(--store),#F0A830)"></div></div>
+    </div>
+    <div class="menu-item" id="mi-tempcheck" onclick="showScreen('s-tempcheck')">
+      <div class="mi-ico" style="background:var(--warn-bg)">❄️</div>
+      <div><div class="mi-title">温度チェック表</div><div class="mi-sub">冷蔵庫・冷凍庫・食品温度</div></div>
+      <div class="mi-right" id="mi-tempcheck-r">›</div>
+    </div>
+    <div class="menu-item" id="mi-delivery" onclick="showScreen('s-delivery')">
+      <div class="mi-ico" style="background:var(--photo-bg)">📦</div>
+      <div><div class="mi-title">納品物チェック</div><div class="mi-sub">個数・鮮度・冷凍品温度・破損</div></div>
+      <div class="mi-right" id="mi-delivery-r">›</div>
+    </div>
+    <div class="menu-item" id="mi-toilet" onclick="showScreen('s-toilet')">
+      <div class="mi-ico" style="background:var(--info-bg)">🚽</div>
+      <div><div class="mi-title">トイレ・ウドゥスペース</div><div class="mi-sub">3回チェック（開・中・閉）</div></div>
+      <div class="mi-right" id="mi-toilet-r">›</div>
+    </div>
+    <div class="menu-item" id="mi-foodtemp" onclick="showScreen('s-foodtemp')">
+      <div class="mi-ico" style="background:var(--ng-bg)">🍖</div>
+      <div><div class="mi-title">食品温度チェック</div><div class="mi-sub">加熱・冷却・揚げ物・スープ</div></div>
+      <div class="mi-right" id="mi-foodtemp-r">›</div>
+    </div>
   </div>
 </div>
 
-<!-- Photo 3 -->
-<div class="card">
-  <img src="images/3-Umeda_gbp.jpeg" alt="Photo 3">
-  <div class="card-body">
-    <div class="photo-id">3-Umeda_gbp.jpeg</div>
-    <div class="caption">Sizzling hot and incredibly delicious! Indulge in the best of both worlds with our juicy A5 Wagyu hamburger steak and premium sliced steak. This is a true Japanese food culture experience, showcasing the versatility of Japan's finest beef. Whether you prefer a classic steak or our famous gyukatsu, we have something to delight your taste buds.</div>
+<!-- =========================================================
+     📸 オープン写真報告
+======================================================== -->
+<div class="screen" id="s-open-photo">
+  <div class="tb">
+    <button class="tb-back" onclick="showScreen('s-home')">←</button>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--photo)">オープン写真報告</div><div class="tb-sub">7項目 · 撮影して送信</div></div>
+    <span class="badge b-photo">写真</span>
+  </div>
+  <div class="sa">
+    <div class="note n-photo">📸 各枠をタップして写真を撮影。AIが自動で衛生状態を確認します。</div>
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:var(--photo-bg)">📋</div>
+        <div><div class="card-title">撮影項目（7箇所）</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open">
+        <div class="photo-section">
+          <div class="photo-grid" id="open-photo-grid">
+            <div class="photo-slot" data-slot="制服姿" onclick="triggerCamera(this,'open')"><div class="ps-icon">👕</div><div class="ps-name">制服姿</div></div>
+            <div class="photo-slot" data-slot="卓セット" onclick="triggerCamera(this,'open')"><div class="ps-icon">🍽️</div><div class="ps-name">卓セット</div></div>
+            <div class="photo-slot" data-slot="ホール全体" onclick="triggerCamera(this,'open')"><div class="ps-icon">🏠</div><div class="ps-name">ホール全体</div></div>
+            <div class="photo-slot" data-slot="デシャップ全体" onclick="triggerCamera(this,'open')"><div class="ps-icon">🍳</div><div class="ps-name">デシャップ</div></div>
+            <div class="photo-slot" data-slot="トイレ" onclick="triggerCamera(this,'open')"><div class="ps-icon">🚽</div><div class="ps-name">トイレ</div></div>
+            <div class="photo-slot" data-slot="ウドゥスペース" onclick="triggerCamera(this,'open')"><div class="ps-icon">💧</div><div class="ps-name">ウドゥ</div></div>
+            <div class="photo-slot" data-slot="お祈りスペース" onclick="triggerCamera(this,'open')"><div class="ps-icon">🕌</div><div class="ps-name">お祈り</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sign-row"><input class="sinp" id="open-sign" type="text" placeholder="責任者サイン（名前）"></div>
+  </div>
+  <div class="bot">
+    <button class="btn btn-photo" id="open-submit-btn" onclick="submitPhotoReport('open','open-photo-grid','open-sign','open')">AIチェックして送信</button>
   </div>
 </div>
 
-<!-- Photo 4 -->
-<div class="card">
-  <img src="images/5-Umeda_gbp.jpeg" alt="Photo 4">
-  <div class="card-body">
-    <div class="photo-id">5-Umeda_gbp.jpeg</div>
-    <div class="caption">A complete Japanese food culture experience on a single tray! Our signature A5 Wagyu gyukatsu set comes with everything you need for a perfect meal: fluffy rice, savory soup, and fresh salad. But that's not all – you also get to enjoy exquisite A5 Wagyu steak sushi. It's the ultimate taste of Japan, combining traditional gyukatsu with a touch of modern luxury.</div>
+<!-- =========================================================
+     📸 クローズ写真報告
+======================================================== -->
+<div class="screen" id="s-close-photo">
+  <div class="tb">
+    <button class="tb-back" onclick="showScreen('s-home')">←</button>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--photo)">クローズ写真報告</div><div class="tb-sub">9項目 · 閉店後に撮影</div></div>
+    <span class="badge b-photo">写真</span>
+  </div>
+  <div class="sa">
+    <div class="note n-photo">📸 閉店後、全項目を撮影して送信してください。</div>
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:var(--photo-bg)">📋</div>
+        <div><div class="card-title">撮影項目（9箇所）</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open">
+        <div class="photo-section">
+          <div class="photo-grid" id="close-photo-grid">
+            <div class="photo-slot" data-slot="全ガス栓" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">全ガス栓</div></div>
+            <div class="photo-slot" data-slot="冷蔵冷凍庫内" onclick="triggerCamera(this,'close')"><div class="ps-icon">❄️</div><div class="ps-name">冷蔵・冷凍庫内</div></div>
+            <div class="photo-slot" data-slot="包丁収納" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔪</div><div class="ps-name">包丁収納</div></div>
+            <div class="photo-slot" data-slot="洗浄機" onclick="triggerCamera(this,'close')"><div class="ps-icon">🫙</div><div class="ps-name">洗浄機</div></div>
+            <div class="photo-slot" data-slot="ボウルザル収納" onclick="triggerCamera(this,'close')"><div class="ps-icon">🥣</div><div class="ps-name">ボウル・ザル</div></div>
+            <div class="photo-slot" data-slot="まな板保管" onclick="triggerCamera(this,'close')"><div class="ps-icon">🟩</div><div class="ps-name">まな板保管</div></div>
+            <div class="photo-slot" data-slot="キッチン全体" onclick="triggerCamera(this,'close')"><div class="ps-icon">🍳</div><div class="ps-name">キッチン全体</div></div>
+            <div class="photo-slot" data-slot="衛生管理報告書" onclick="triggerCamera(this,'close')"><div class="ps-icon">📄</div><div class="ps-name">衛生管理報告書</div></div>
+            <div class="photo-slot" data-slot="加熱器具" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">加熱器具</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sign-row"><input class="sinp" id="close-sign" type="text" placeholder="責任者サイン（名前）"></div>
+  </div>
+  <div class="bot">
+    <button class="btn btn-photo" onclick="submitPhotoReport('close','close-photo-grid','close-sign','close')">AIチェックして送信</button>
   </div>
 </div>
 
-<!-- Photo 5 -->
-<div class="card">
-  <img src="images/6-Umeda_gbp.jpeg" alt="Photo 5">
-  <div class="card-body">
-    <div class="photo-id">6-Umeda_gbp.jpeg</div>
-    <div class="caption">Discover the art of Japanese dining with our A5 Wagyu gyukatsu set. This is a true Japanese food culture experience, offering a variety of ways to enjoy premium beef. The set includes our famous crispy gyukatsu, which you can grill to perfection on your personal stone plate, and delicate A5 Wagyu steak sushi. It's a culinary journey through the best of Japan's beef traditions, a perfect steak dinner.</div>
+<!-- =========================================================
+     📸 低温調理報告
+======================================================== -->
+<div class="screen" id="s-lowtemp-photo">
+  <div class="tb">
+    <button class="tb-back" onclick="showScreen('s-home')">←</button>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--photo)">低温調理報告</div><div class="tb-sub">温度報告 + 冷却確認</div></div>
+    <span class="badge b-warn">要提出</span>
+  </div>
+  <div class="sa">
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:var(--warn-bg)">🌡️</div>
+        <div><div class="card-title">低温調理温度報告</div><div class="card-sub">温度計3本 · 60℃以上5時間</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open">
+        <div class="photo-section">
+          <div class="note n-warn" style="margin-bottom:10px">⚠️ 全温度計が60℃以上 / 5時間であること</div>
+          <div class="photo-grid" id="lowtemp-photo-grid">
+            <div class="photo-slot" data-slot="温度計①" onclick="triggerCamera(this,'lowtemp_temp')"><div class="ps-icon">🌡️</div><div class="ps-name">温度計①</div></div>
+            <div class="photo-slot" data-slot="温度計②" onclick="triggerCamera(this,'lowtemp_temp')"><div class="ps-icon">🌡️</div><div class="ps-name">温度計②</div></div>
+            <div class="photo-slot" data-slot="温度計③" onclick="triggerCamera(this,'lowtemp_temp')"><div class="ps-icon">🌡️</div><div class="ps-name">温度計③</div></div>
+          </div>
+        </div>
+        <div class="temp-row"><div class="temp-lbl">温度計①<br><span class="temp-lbl-sub">60℃以上</span></div><input class="tinp" id="lt1" type="number" step="0.1" oninput="evalT(this,60,null,'ge')"><div class="tunit">℃</div></div>
+        <div class="temp-row"><div class="temp-lbl">温度計②<br><span class="temp-lbl-sub">60℃以上</span></div><input class="tinp" id="lt2" type="number" step="0.1" oninput="evalT(this,60,null,'ge')"><div class="tunit">℃</div></div>
+        <div class="temp-row" style="border-bottom:none"><div class="temp-lbl">温度計③<br><span class="temp-lbl-sub">60℃以上</span></div><input class="tinp" id="lt3" type="number" step="0.1" oninput="evalT(this,60,null,'ge')"><div class="tunit">℃</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:var(--info-bg)">🧊</div>
+        <div><div class="card-title">低温調理冷却報告</div><div class="card-sub">氷水 · 30分以内20℃以下</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open">
+        <div class="photo-section">
+          <div class="note n-info" style="margin-bottom:10px">ℹ️ 全ての肉が氷水にしっかり浸かっているか確認</div>
+          <div class="photo-grid" id="lowcool-photo-grid">
+            <div class="photo-slot" style="grid-column:span 2;aspect-ratio:2/1" data-slot="氷水冷却全体" onclick="triggerCamera(this,'lowtemp_cool')"><div class="ps-icon">🧊</div><div class="ps-name">氷水・全体写真</div></div>
+            <div class="photo-slot" data-slot="冷却中心温度計" onclick="triggerCamera(this,'lowtemp_cool')"><div class="ps-icon">🌡️</div><div class="ps-name">中心温度計</div></div>
+          </div>
+        </div>
+        <div class="temp-row" style="border-bottom:none"><div class="temp-lbl">冷却後中心温度<br><span class="temp-lbl-sub">30分以内に20℃以下</span></div><input class="tinp" id="cool-temp" type="number" step="0.1" oninput="evalT(this,null,20,'le')"><div class="tunit">℃</div></div>
+      </div>
+    </div>
+    <div class="sign-row"><input class="sinp" id="lowtemp-sign" type="text" placeholder="担当者名"></div>
+  </div>
+  <div class="bot">
+    <button class="btn btn-photo" onclick="submitLowtempReport()">AIチェックして送信</button>
   </div>
 </div>
 
-<!-- Photo 6 -->
-<div class="card">
-  <img src="images/7-Umeda_gbp.jpeg" alt="Photo 6">
-  <div class="card-body">
-    <div class="photo-id">7-Umeda_gbp.jpeg</div>
-    <div class="caption">Create unforgettable memories in Japan with a unique Japanese food culture experience perfect for the whole family! Our friendly staff will guide you as you grill your own delicious A5 Wagyu gyukatsu steak right at your table. It's a fun, interactive, and delicious way to enjoy Japan's finest beef. Come share the joy with your loved ones!</div>
+<!-- =========================================================
+     👤 身だしなみ
+======================================================== -->
+<div class="screen" id="s-grooming">
+  <div class="tb">
+    <button class="tb-back" onclick="showScreen('s-home')">←</button>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--personal)">身だしなみチェック</div><div class="tb-sub">個人記入</div></div>
+    <span class="badge b-personal">個人</span>
+  </div>
+  <div class="sa">
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:#E6F5F2">👕</div>
+        <div><div class="card-title">衛生的な服装</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open">
+        <div class="ci" onclick="toggleCI(this)" data-key="clean"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">清潔感がある</div><div class="ci-sub">Clean and neat appearance</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="hair"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">頭髪は整っている</div><div class="ci-sub">Hair is tidy</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="nails"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">爪は整っていて綺麗か</div><div class="ci-sub">Nails are trimmed and clean</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="accessories"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">アクセサリーなし</div><div class="ci-sub">No accessories</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="fragrance"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">過度な香料は避ける</div><div class="ci-sub">No strong fragrances</div></div></div>
+      </div>
+    </div>
+    <div class="sign-row"><input class="sinp" id="grooming-sign" type="text" placeholder="氏名を入力"></div>
+  </div>
+  <div class="bot">
+    <button class="btn btn-main" onclick="submitGrooming()">次：健康チェックへ</button>
   </div>
 </div>
 
-<!-- Photo 7 -->
-<div class="card">
-  <img src="images/8-Umeda_gbp.jpeg" alt="Photo 7">
-  <div class="card-body">
-    <div class="photo-id">8-Umeda_gbp.jpeg</div>
-    <div class="caption">Indulge in the ultimate A5 Wagyu steak experience in Japan! This luxurious set features perfectly grilled, tender steak, allowing you to savor the rich flavor of premium Japanese beef. But the journey doesn't end there – this meal is a true Japanese food culture experience, complete with delicate A5 Wagyu sushi. While we're famous for our gyukatsu, this exquisite steak set is a must-try for any connoisseur.</div>
+<!-- =========================================================
+     👤 健康チェック
+======================================================== -->
+<div class="screen" id="s-health">
+  <div class="tb">
+    <button class="tb-back" onclick="showScreen('s-home')">←</button>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--personal)">健康チェック</div><div class="tb-sub">個人記入</div></div>
+    <span class="badge b-personal">個人</span>
+  </div>
+  <div class="sa">
+    <div class="note n-warn">⚠️ 発熱・下痢・嘔吐がある場合は出勤停止。責任者に連絡してください。</div>
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:var(--ok-bg)">🌡️</div>
+        <div><div class="card-title">体温測定</div><div class="card-sub">37.5℃未満が基準</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open">
+        <div class="temp-row" style="border-bottom:none">
+          <div class="temp-lbl">体温<br><span class="temp-lbl-sub">37.5℃以上で出勤不可</span></div>
+          <input class="tinp" id="body-temp" type="number" step="0.1" placeholder="36.5" oninput="evalT(this,null,37.4,'le')">
+          <div class="tunit">℃</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:#E6F5F2">🩺</div>
+        <div><div class="card-title">症状確認</div><div class="card-sub">全て「なし」であること</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open">
+        <div class="ci" onclick="toggleCI(this)" data-key="fever"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">発熱症状なし</div><div class="ci-sub">No signs of fever</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="diarrhea"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">下痢症状なし</div><div class="ci-sub">No signs of diarrhea</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="vomiting"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">嘔吐症状なし</div><div class="ci-sub">No signs of vomiting</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="contact"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">周囲に感染者なし</div><div class="ci-sub">No infected persons nearby</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="handwash"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">出勤時手洗い実施</div><div class="ci-sub">Handwashing upon arrival</div></div></div>
+      </div>
+    </div>
+    <div class="sign-row"><input class="sinp" id="health-sign" type="text" placeholder="氏名 + 責任者確認サイン"></div>
+  </div>
+  <div class="bot">
+    <button class="btn btn-main" onclick="submitHealth()">提出する</button>
   </div>
 </div>
 
-<!-- Photo 8 -->
-<div class="card">
-  <img src="images/9-Umeda_gbp.jpeg" alt="Photo 8">
-  <div class="card-body">
-    <div class="photo-id">9-Umeda_gbp.jpeg</div>
-    <div class="caption">Get ready for a sizzling good time in Japan! This platter offers a fantastic variety, featuring not only our premium A5 Wagyu steak but also savory chicken, all cooked to perfection on a hot plate. It's a comprehensive Japanese food culture experience that goes beyond just beef. Whether you're a fan of gyukatsu or a perfectly cooked steak, this dish has something for everyone.</div>
+<!-- =========================================================
+     🏪 温度チェック表
+======================================================== -->
+<div class="screen" id="s-tempcheck">
+  <div class="tb">
+    <button class="tb-back" onclick="showScreen('s-home')">←</button>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--store)">温度チェック表</div><div class="tb-sub">店舗全体</div></div>
+    <span class="badge b-store">店舗</span>
+  </div>
+  <div class="sa">
+    <div class="note n-warn">⚠️ 冷蔵4℃以下 / 冷凍-18℃以下。基準超過は即責任者へ</div>
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:var(--info-bg)">❄️</div>
+        <div><div class="card-title">冷蔵庫・冷凍庫 時間別温度</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open" style="padding:10px;overflow-x:auto">
+        <table class="ttable">
+          <tr><th class="tlbl">設備</th><th>12:00</th><th>13:00</th><th>14:00</th><th>15:00</th><th>16:00</th><th>18:00</th><th>20:00</th></tr>
+          <tr><td class="tlbl">冷凍庫①</td><td><input type="number" class="tc-inp" data-eq="冷凍庫①" data-time="12:00"></td><td><input type="number" data-eq="冷凍庫①" data-time="13:00"></td><td><input type="number" data-eq="冷凍庫①" data-time="14:00"></td><td><input type="number" data-eq="冷凍庫①" data-time="15:00"></td><td><input type="number" data-eq="冷凍庫①" data-time="16:00"></td><td><input type="number" data-eq="冷凍庫①" data-time="18:00"></td><td><input type="number" data-eq="冷凍庫①" data-time="20:00"></td></tr>
+          <tr><td class="tlbl">冷凍庫②</td><td><input type="number" data-eq="冷凍庫②" data-time="12:00"></td><td><input type="number" data-eq="冷凍庫②" data-time="13:00"></td><td><input type="number" data-eq="冷凍庫②" data-time="14:00"></td><td><input type="number" data-eq="冷凍庫②" data-time="15:00"></td><td><input type="number" data-eq="冷凍庫②" data-time="16:00"></td><td><input type="number" data-eq="冷凍庫②" data-time="18:00"></td><td><input type="number" data-eq="冷凍庫②" data-time="20:00"></td></tr>
+          <tr><td class="tlbl">冷蔵庫①</td><td><input type="number" data-eq="冷蔵庫①" data-time="12:00"></td><td><input type="number" data-eq="冷蔵庫①" data-time="13:00"></td><td><input type="number" data-eq="冷蔵庫①" data-time="14:00"></td><td><input type="number" data-eq="冷蔵庫①" data-time="15:00"></td><td><input type="number" data-eq="冷蔵庫①" data-time="16:00"></td><td><input type="number" data-eq="冷蔵庫①" data-time="18:00"></td><td><input type="number" data-eq="冷蔵庫①" data-time="20:00"></td></tr>
+          <tr><td class="tlbl">ドリンク</td><td><input type="number" data-eq="ドリンク" data-time="12:00"></td><td><input type="number" data-eq="ドリンク" data-time="13:00"></td><td><input type="number" data-eq="ドリンク" data-time="14:00"></td><td><input type="number" data-eq="ドリンク" data-time="15:00"></td><td><input type="number" data-eq="ドリンク" data-time="16:00"></td><td><input type="number" data-eq="ドリンク" data-time="18:00"></td><td><input type="number" data-eq="ドリンク" data-time="20:00"></td></tr>
+          <tr><td class="tlbl">冷蔵庫②</td><td><input type="number" data-eq="冷蔵庫②" data-time="12:00"></td><td><input type="number" data-eq="冷蔵庫②" data-time="13:00"></td><td><input type="number" data-eq="冷蔵庫②" data-time="14:00"></td><td><input type="number" data-eq="冷蔵庫②" data-time="15:00"></td><td><input type="number" data-eq="冷蔵庫②" data-time="16:00"></td><td><input type="number" data-eq="冷蔵庫②" data-time="18:00"></td><td><input type="number" data-eq="冷蔵庫②" data-time="20:00"></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="bot"><button class="btn btn-main" onclick="submitTempCheck()">提出する</button></div>
+</div>
+
+<!-- =========================================================
+     🏪 納品物チェック
+======================================================== -->
+<div class="screen" id="s-delivery">
+  <div class="tb">
+    <button class="tb-back" onclick="showScreen('s-home')">←</button>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--store)">納品物チェック</div><div class="tb-sub">店舗全体</div></div>
+    <span class="badge b-store">店舗</span>
+  </div>
+  <div class="sa">
+    <div class="note n-warn">⚠️ 問題があれば商品と納品書の写真を撮影</div>
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:var(--photo-bg)">📦</div>
+        <div><div class="card-title">納品確認</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open">
+        <div class="ci" onclick="toggleCI(this)" data-key="count"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">商品個数確認</div><div class="ci-sub">Number of delivered items</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="fresh"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">野菜鮮度確認</div><div class="ci-sub">Freshness of vegetables</div></div></div>
+        <div class="temp-row">
+          <div class="temp-lbl">冷凍品温度<br><span class="temp-lbl-sub">-18℃以下</span></div>
+          <input class="tinp" id="delivery-temp" type="number" step="0.1" oninput="evalT(this,null,-18,'le')">
+          <div class="tunit">℃</div>
+        </div>
+        <div class="ci" onclick="toggleCI(this)" data-key="damage"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">キズ・へこみなし</div><div class="ci-sub">No damage / dents</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="bot"><button class="btn btn-main" onclick="submitDelivery()">提出する</button></div>
+</div>
+
+<!-- =========================================================
+     🏪 トイレ
+======================================================== -->
+<div class="screen" id="s-toilet">
+  <div class="tb">
+    <button class="tb-back" onclick="showScreen('s-home')">←</button>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--store)">トイレ・ウドゥスペース</div><div class="tb-sub">3回チェック</div></div>
+    <span class="badge b-store">店舗</span>
+  </div>
+  <div class="sa">
+    <div class="note n-info">ℹ️ 開店・中間・閉店の3回記録</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button class="btn" style="flex:1;padding:9px;font-size:12px;border-radius:10px;background:var(--photo);color:#fff" id="toilet-tab-0" onclick="setToiletTab(0)">オープン</button>
+      <button class="btn" style="flex:1;padding:9px;font-size:12px;border-radius:10px;background:var(--border);color:var(--text2)" id="toilet-tab-1" onclick="setToiletTab(1)">中間</button>
+      <button class="btn" style="flex:1;padding:9px;font-size:12px;border-radius:10px;background:var(--border);color:var(--text2)" id="toilet-tab-2" onclick="setToiletTab(2)">クローズ</button>
+    </div>
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:var(--info-bg)">🚽</div>
+        <div><div class="card-title" id="toilet-timing-label">オープン チェック</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open" id="toilet-body">
+        <div class="ci" onclick="toggleCI(this)" data-key="floor"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">床・壁</div><div class="ci-sub">Floor and walls</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="toilet_bowl"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">便座・便器内</div><div class="ci-sub">Toilet seat and bowl</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="sink"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">洗面台</div><div class="ci-sub">Sink</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="supplies"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">備品・ゴミ箱</div><div class="ci-sub">Supplies and trash bin</div></div></div>
+        <div class="ci" onclick="toggleCI(this)" data-key="dry"><div class="ci-box"></div><div class="ci-main"><div class="ci-lbl">床が濡れていないか</div><div class="ci-sub">Ensure the floor is dry</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="bot"><button class="btn btn-main" onclick="submitToilet()">提出する</button></div>
+</div>
+
+<!-- =========================================================
+     🏪 食品温度
+======================================================== -->
+<div class="screen" id="s-foodtemp">
+  <div class="tb">
+    <button class="tb-back" onclick="showScreen('s-home')">←</button>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--store)">食品温度チェック</div><div class="tb-sub">店舗全体</div></div>
+    <span class="badge b-store">店舗</span>
+  </div>
+  <div class="sa">
+    <div class="note n-info">ℹ️ 冷蔵4℃以下 / 加熱75℃以上 / 揚げ物180℃ / 高温保管65〜70℃ / 冷却20℃以下</div>
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:var(--ng-bg)">🍖</div>
+        <div><div class="card-title">食品温度チェック項目</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open">
+        <div class="temp-row"><div class="temp-lbl">非加熱冷蔵（生もの）<br><span class="temp-lbl-sub">4℃以下</span></div><input class="tinp" id="ft1" type="number" step="0.1" oninput="evalT(this,null,4,'le')"><div class="tunit">℃</div></div>
+        <div class="temp-row"><div class="temp-lbl">加熱（焼き物）<br><span class="temp-lbl-sub">中心75℃以上</span></div><input class="tinp" id="ft2" type="number" step="0.1" oninput="evalT(this,75,null,'ge')"><div class="tunit">℃</div></div>
+        <div class="temp-row"><div class="temp-lbl">揚げ油<br><span class="temp-lbl-sub">180℃</span></div><input class="tinp" id="ft3" type="number" step="0.5" oninput="evalT(this,175,185,'range')"><div class="tunit">℃</div></div>
+        <div class="temp-row"><div class="temp-lbl">高温保管（から揚げ）<br><span class="temp-lbl-sub">65〜70℃</span></div><input class="tinp" id="ft4" type="number" step="0.1" oninput="evalT(this,65,70,'range')"><div class="tunit">℃</div></div>
+        <div class="temp-row"><div class="temp-lbl">再加熱（カレー等）<br><span class="temp-lbl-sub">75℃以上</span></div><input class="tinp" id="ft5" type="number" step="0.1" oninput="evalT(this,75,null,'ge')"><div class="tunit">℃</div></div>
+        <div class="temp-row"><div class="temp-lbl">冷却（たれ・ソース）<br><span class="temp-lbl-sub">20℃以下</span></div><input class="tinp" id="ft6" type="number" step="0.1" oninput="evalT(this,null,20,'le')"><div class="tunit">℃</div></div>
+        <div class="temp-row"><div class="temp-lbl">ファースト揚げ物中心<br><span class="temp-lbl-sub">75℃以上</span></div><input class="tinp" id="ft7" type="number" step="0.1" oninput="evalT(this,75,null,'ge')"><div class="tunit">℃</div></div>
+        <div class="temp-row" style="border-bottom:none"><div class="temp-lbl">ラーメンスープ<br><span class="temp-lbl-sub">65℃以上</span></div><input class="tinp" id="ft8" type="number" step="0.1" oninput="evalT(this,65,null,'ge')"><div class="tunit">℃</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="bot"><button class="btn btn-main" onclick="submitFoodTemp()">提出する</button></div>
+</div>
+
+<!-- =========================================================
+     AI SCREEN
+======================================================== -->
+<div class="screen" id="s-ai">
+  <div class="tb"><div class="tb-info" style="padding-left:4px"><div class="tb-brand">送信中...</div><div class="tb-sub">データを保存しています</div></div></div>
+  <div class="ai-wrap">
+    <div class="ai-spin"></div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:6px">処理中</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7" id="ai-msg">データをSupabaseに保存中...</div>
+    <div style="width:100%;margin-top:18px" id="ai-steps">
+      <div class="ai-step as-done"><span style="width:22px">✅</span>データ送信中</div>
+      <div class="ai-step as-run" id="as2"><span style="width:22px">⏳</span>Supabaseに保存中...</div>
+      <div class="ai-step as-pend" id="as3"><span style="width:22px">○</span>完了確認</div>
+    </div>
   </div>
 </div>
 
-<!-- Photo 9 -->
-<div class="card">
-  <img src="images/11-Umeda_gbp.jpeg" alt="Photo 9">
-  <div class="card-body">
-    <div class="photo-id">11-Umeda_gbp.jpeg</div>
-    <div class="caption">Immerse yourself in authentic Japanese ambiance. Our traditional seating offers a unique Japanese food culture experience, the perfect setting to enjoy our renowned A5 Wagyu gyukatsu and steak. Relax and dine in a space that truly feels like Japan, making your meal more than just a steak dinner, but a memory to cherish.</div>
+<!-- =========================================================
+     RESULT
+======================================================== -->
+<div class="screen" id="s-result">
+  <div class="tb"><div class="tb-info" style="padding-left:4px"><div class="tb-brand">送信完了</div><div class="tb-sub">Supabaseに保存されました</div></div></div>
+  <div class="sa">
+    <div class="res-hero">
+      <div class="res-ico" id="result-ico" style="background:var(--ok-bg)">✅</div>
+      <div class="res-title" id="result-title">送信完了</div>
+      <div class="res-sub" id="result-sub">報告が正常に保存されました。</div>
+    </div>
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:var(--ok-bg)">📋</div>
+        <div><div class="card-title">送信内容</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open" style="padding:8px 14px" id="result-detail"></div>
+    </div>
+    <div style="padding:0 0 16px">
+      <button class="btn btn-main" onclick="showScreen('s-home');updateProgress()">ホームに戻る</button>
+    </div>
   </div>
 </div>
 
-<!-- Photo 10 -->
-<div class="card">
-  <img src="images/12-Umeda_gbp.jpeg" alt="Photo 10">
-  <div class="card-body">
-    <div class="photo-id">12-Umeda_gbp.jpeg</div>
-    <div class="caption">Welcome to SHINJUKU-TEI! We are proud to offer a Muslim-friendly dining experience, serving delicious Halal A5 Wagyu gyukatsu. Now everyone can enjoy this unique Japanese food culture experience. Come and taste the finest Halal steak and gyukatsu in Japan, prepared with the utmost care.</div>
+<!-- =========================================================
+     DASHBOARD
+======================================================== -->
+<div class="screen" id="s-dash">
+  <div class="tb">
+    <button class="tb-back" onclick="showScreen('s-home')">←</button>
+    <div class="tb-info"><div class="tb-brand">管理者ダッシュボード</div><div class="tb-sub">全店舗 · リアルタイム</div></div>
+  </div>
+  <div class="sa">
+    <div class="dash-stat-grid" id="dash-stats">
+      <div class="stat-box"><div class="stat-num" style="color:var(--ok)" id="dash-rate">—</div><div class="stat-lbl">提出率</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--ng)" id="dash-alerts">—</div><div class="stat-lbl">アラート</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--warn)" id="dash-missing">—</div><div class="stat-lbl">未提出店舗</div></div>
+    </div>
+    <div class="sec-lbl">店舗別ステータス</div>
+    <div id="dash-stores"><div style="text-align:center;padding:20px;color:var(--text3)">読み込み中...</div></div>
   </div>
 </div>
 
-<!-- Photo 11 -->
-<div class="card">
-  <img src="images/21-Umeda_gbp.jpeg" alt="Photo 11">
-  <div class="card-body">
-    <div class="photo-id">21-Umeda_gbp.jpeg</div>
-    <div class="caption">Good times and great food with friends from all over the world! Our restaurant is a place where people come together to enjoy a fantastic Japanese food culture experience. Share the fun of grilling your own A5 Wagyu gyukatsu and steak. It's more than a meal; it's a memory you'll share forever. Thank you for visiting us in Japan!</div>
-  </div>
-</div>
+<script>
+// =====================================================
+// SUPABASE 設定（ここを編集してください）
+// =====================================================
+const SUPABASE_URL = 'https://mygnpsmvyxdktrnyacsl.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_IndIwDpVX18CshTHpvNnAQ_6GthPauR';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-<!-- Photo 12 -->
-<div class="card">
-  <img src="images/23-Umeda_gbp.jpeg" alt="Photo 12">
-  <div class="card-body">
-    <div class="photo-id">23-Umeda_gbp.jpeg</div>
-    <div class="caption">The ultimate indulgence for steak lovers! Feast your eyes on the magnificent marbling of our premium A5 Wagyu steak, a true symbol of Japan's world-renowned beef. This is a Japanese food culture experience at its finest, where you can savor the incredibly rich and tender flavor that only A5 Wagyu can offer. While our gyukatsu is famous, this steak is an unforgettable masterpiece.</div>
-  </div>
-</div>
+// =====================================================
+// アプリ状態
+// =====================================================
+let currentStore = null; // {id, name}
+let currentStaff = ''; // 名前
+let toiletTab = 0;
+let activePhotoSlot = null;
+let activePhotoType = '';
+let todayProgress = { photo:0, personal:0, store:0 };
 
-<!-- Photo 13 -->
-<div class="card">
-  <img src="images/Umeda-Wagyu.jpg" alt="Photo 13">
-  <div class="card-body">
-    <div class="photo-id">Umeda-Wagyu.jpg</div>
-    <div class="caption">This is where the magic begins. Behold the exquisite marbling of our premium A5 Wagyu, the highest grade of beef in Japan. This intricate webbing of flavor is the secret to the unparalleled tenderness and rich taste of our steak and gyukatsu. We are committed to providing an authentic Japanese food culture experience, starting with the finest ingredients. Come and savor the perfection of A5 Wagyu.</div>
-  </div>
-</div>
+// =====================================================
+// 初期化
+// =====================================================
+document.addEventListener('DOMContentLoaded', async () => {
+  const d = new Date(), days = ['日','月','火','水','木','金','土'];
+  const el = document.getElementById('hdate');
+  if(el) el.textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+  await loadStores();
+});
 
+async function loadStores() {
+  try {
+    const { data, error } = await sb.from('stores').select('id,name').eq('is_active', true).order('name');
+    if (error) throw error;
+    const sel = document.getElementById('login-store');
+    data.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id; opt.textContent = s.name;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    showToast('店舗データ取得エラー: ' + e.message);
+  }
+}
+
+// =====================================================
+// ログイン
+// =====================================================
+async function doLogin() {
+  const storeId = document.getElementById('login-store').value;
+  const name = document.getElementById('login-name').value.trim();
+  const err = document.getElementById('login-err');
+  if (!storeId) { err.textContent = '店舗を選択してください'; return; }
+  if (!name) { err.textContent = '名前を入力してください'; return; }
+
+  const storeName = document.getElementById('login-store').options[document.getElementById('login-store').selectedIndex].text;
+  currentStore = { id: storeId, name: storeName };
+  currentStaff = name;
+
+  document.getElementById('hero-store').textContent = '📍 ' + storeName;
+  err.textContent = '';
+  showScreen('s-home');
+  updateProgress();
+}
+
+// =====================================================
+// 画面遷移
+// =====================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function switchCat(cat, tabEl) {
+  ['photo','personal','store'].forEach(c => {
+    document.getElementById('cat-'+c).style.display = c===cat ? '' : 'none';
+    document.getElementById('tab-'+c).classList.toggle('active', c===cat);
+  });
+  document.getElementById('tab-dash').classList.remove('active');
+  if(tabEl) tabEl.classList.add('active');
+}
+
+// =====================================================
+// UI helpers
+// =====================================================
+function toggleCard(head) {
+  const body = head.nextElementSibling;
+  const chev = head.querySelector('.card-chev');
+  const o = body.classList.toggle('open');
+  chev.classList.toggle('open', o);
+}
+
+function toggleCI(item) {
+  item.classList.toggle('chk');
+  item.querySelector('.ci-box').textContent = item.classList.contains('chk') ? '✓' : '';
+}
+
+function evalT(inp, mn, mx, mode) {
+  const v = parseFloat(inp.value);
+  if (isNaN(v)) { inp.className = 'tinp'; return; }
+  let ok = false;
+  if (mode==='ge') ok = v>=mn;
+  else if (mode==='le') ok = v<=mx;
+  else if (mode==='range') ok = v>=mn && v<=mx;
+  inp.className = 'tinp ' + (ok ? 'ok' : 'ng');
+}
+
+function setToiletTab(idx) {
+  toiletTab = idx;
+  const labels = ['オープン','中間','クローズ'];
+  document.getElementById('toilet-timing-label').textContent = labels[idx] + ' チェック';
+  [0,1,2].forEach(i => {
+    const btn = document.getElementById('toilet-tab-'+i);
+    btn.style.background = i===idx ? 'var(--photo)' : 'var(--border)';
+    btn.style.color = i===idx ? '#fff' : 'var(--text2)';
+  });
+  // チェック項目をリセット
+  document.querySelectorAll('#toilet-body .ci').forEach(ci => {
+    ci.classList.remove('chk');
+    ci.querySelector('.ci-box').textContent = '';
+  });
+}
+
+function showToast(msg, dur=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// =====================================================
+// カメラ / 写真
+// =====================================================
+function triggerCamera(slot, type) {
+  activePhotoSlot = slot;
+  activePhotoType = type;
+  const inp = document.getElementById('camera-input');
+  inp.onchange = handlePhotoSelected;
+  inp.click();
+}
+
+async function handlePhotoSelected(e) {
+  const file = e.target.files[0];
+  if (!file || !activePhotoSlot) return;
+  e.target.value = '';
+
+  const slot = activePhotoSlot;
+  const slotName = slot.dataset.slot;
+  const type = activePhotoType;
+
+  // UI：アップロード中
+  slot.classList.add('uploading');
+  let st = slot.querySelector('.ps-status');
+  if (!st) { st = document.createElement('div'); st.className = 'ps-status'; slot.appendChild(st); }
+  st.className = 'ps-status pss-up'; st.textContent = '↑';
+
+  try {
+    const ext = file.type.includes('png') ? 'png' : 'jpg';
+    const path = `${currentStore.id}/${type}/${Date.now()}_${slotName}.${ext}`;
+    const { error: upErr } = await sb.storage.from('hygiene-photos').upload(path, file, { contentType: file.type, upsert: true });
+    if (upErr) throw upErr;
+
+    const { data: urlData } = sb.storage.from('hygiene-photos').getPublicUrl(path);
+    slot.dataset.url = urlData.publicUrl;
+    slot.classList.remove('uploading');
+    slot.classList.add('taken');
+    st.className = 'ps-status pss-ok'; st.textContent = '✓';
+    showToast('✓ ' + slotName + ' 撮影完了');
+  } catch(err) {
+    slot.classList.remove('uploading');
+    st.className = 'ps-status pss-ng'; st.textContent = '!';
+    showToast('アップロードエラー: ' + err.message, 4000);
+  }
+}
+
+// =====================================================
+// 写真報告 送信
+// =====================================================
+async function submitPhotoReport(reportType, gridId, signId, progressKey) {
+  if (!currentStore) { showToast('先にログインしてください'); return; }
+  showScreen('s-ai');
+  animateAI();
+
+  try {
+    const slots = document.querySelectorAll('#' + gridId + ' .photo-slot');
+    const photos = Array.from(slots).map(s => ({
+      slot: s.dataset.slot,
+      url: s.dataset.url || null,
+      taken: s.classList.contains('taken')
+    }));
+    const sign = document.getElementById(signId)?.value || '';
+
+    const { error } = await sb.from('photo_reports').insert({
+      store_id: currentStore.id,
+      report_type: reportType,
+      photos: photos,
+      manager_sign: sign,
+      status: 'submitted',
+      ai_summary: null
+    });
+    if (error) throw error;
+
+    todayProgress.photo = Math.min(todayProgress.photo + 1, 3);
+    showResult('✅', '送信完了', '写真報告をSupabaseに保存しました。',
+      photos.filter(p => p.taken).map(p => ({ icon:'✅', text: p.slot + ' 撮影済み', badge:'ri-ok' }))
+        .concat(photos.filter(p => !p.taken).map(p => ({ icon:'⚪', text: p.slot + ' 未撮影', badge:'ri-warn' })))
+    );
+  } catch(err) {
+    showResult('❌', '送信エラー', err.message, []);
+  }
+}
+
+async function submitLowtempReport() {
+  if (!currentStore) { showToast('先にログインしてください'); return; }
+  showScreen('s-ai');
+  animateAI();
+
+  try {
+    const temps = {
+      temp1: parseFloat(document.getElementById('lt1').value) || null,
+      temp2: parseFloat(document.getElementById('lt2').value) || null,
+      temp3: parseFloat(document.getElementById('lt3').value) || null,
+      cool_temp: parseFloat(document.getElementById('cool-temp').value) || null
+    };
+    const slots1 = document.querySelectorAll('#lowtemp-photo-grid .photo-slot');
+    const slots2 = document.querySelectorAll('#lowcool-photo-grid .photo-slot');
+    const photos = [
+      ...Array.from(slots1).map(s => ({ slot: s.dataset.slot, url: s.dataset.url || null })),
+      ...Array.from(slots2).map(s => ({ slot: s.dataset.slot, url: s.dataset.url || null }))
+    ];
+    const sign = document.getElementById('lowtemp-sign')?.value || '';
+
+    // temp report
+    await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_temp', photos: photos.slice(0,3), temp_values: temps, manager_sign: sign, status: 'submitted' });
+    // cool report
+    await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_cool', photos: photos.slice(3), temp_values: { cool_temp: temps.cool_temp }, status: 'submitted' });
+
+    todayProgress.photo = Math.min(todayProgress.photo + 1, 3);
+    const items = [];
+    if (temps.temp1 !== null) items.push({ icon: temps.temp1 >= 60 ? '✅' : '⚠️', text: `温度計①: ${temps.temp1}℃`, badge: temps.temp1 >= 60 ? 'ri-ok' : 'ri-ng' });
+    if (temps.temp2 !== null) items.push({ icon: temps.temp2 >= 60 ? '✅' : '⚠️', text: `温度計②: ${temps.temp2}℃`, badge: temps.temp2 >= 60 ? 'ri-ok' : 'ri-ng' });
+    if (temps.temp3 !== null) items.push({ icon: temps.temp3 >= 60 ? '✅' : '⚠️', text: `温度計③: ${temps.temp3}℃`, badge: temps.temp3 >= 60 ? 'ri-ok' : 'ri-ng' });
+    if (temps.cool_temp !== null) items.push({ icon: temps.cool_temp <= 20 ? '✅' : '⚠️', text: `冷却温度: ${temps.cool_temp}℃`, badge: temps.cool_temp <= 20 ? 'ri-ok' : 'ri-ng' });
+    showResult('✅', '低温調理報告 送信完了', 'Supabaseに保存しました。', items);
+  } catch(err) {
+    showResult('❌', '送信エラー', err.message, []);
+  }
+}
+
+// =====================================================
+// 個人衛生 送信
+// =====================================================
+async function submitGrooming() {
+  if (!currentStore) { showToast('先にログインしてください'); return; }
+  showScreen('s-ai'); animateAI();
+  try {
+    const grooming = {};
+    document.querySelectorAll('#s-grooming .ci').forEach(ci => { grooming[ci.dataset.key] = ci.classList.contains('chk'); });
+    const sign = document.getElementById('grooming-sign').value;
+    await sb.from('personal_hygiene').insert({ store_id: currentStore.id, staff_name: currentStaff, grooming: grooming, sign: sign, status: 'ok' });
+    todayProgress.personal = Math.min(todayProgress.personal + 1, 2);
+    showResult('✅', '身だしなみチェック 完了', '次は健康チェックを記入してください。',
+      Object.entries(grooming).map(([k,v]) => ({ icon: v?'✅':'⚪', text: k, badge: v?'ri-ok':'ri-warn' }))
+    );
+  } catch(err) { showResult('❌', '送信エラー', err.message, []); }
+}
+
+async function submitHealth() {
+  if (!currentStore) { showToast('先にログインしてください'); return; }
+  showScreen('s-ai'); animateAI();
+  try {
+    const health = { body_temp: parseFloat(document.getElementById('body-temp').value) || null };
+    document.querySelectorAll('#s-health .ci').forEach(ci => { health[ci.dataset.key] = ci.classList.contains('chk'); });
+    const sign = document.getElementById('health-sign').value;
+    const ok = health.body_temp === null || health.body_temp < 37.5;
+    await sb.from('personal_hygiene').insert({ store_id: currentStore.id, staff_name: currentStaff, health: health, sign: sign, status: ok ? 'ok' : 'ng' });
+    todayProgress.personal = Math.min(todayProgress.personal + 1, 2);
+    const items = [{ icon: ok?'✅':'❌', text: `体温: ${health.body_temp||'—'}℃`, badge: ok?'ri-ok':'ri-ng' }];
+    showResult(ok?'✅':'⚠️', '健康チェック 完了', ok ? '問題なし。本日もよろしくお願いします！' : '体温が基準を超えています。責任者に報告してください。', items);
+  } catch(err) { showResult('❌', '送信エラー', err.message, []); }
+}
+
+// =====================================================
+// 店舗全体 送信
+// =====================================================
+async function submitStoreReport(type, data) {
+  if (!currentStore) { showToast('先にログインしてください'); return; }
+  showScreen('s-ai'); animateAI();
+  try {
+    await sb.from('store_reports').insert({ store_id: currentStore.id, staff_name: currentStaff, report_type: type, data: data, status: 'ok' });
+    todayProgress.store = Math.min(todayProgress.store + 1, 4);
+    showResult('✅', '送信完了', '店舗全体報告をSupabaseに保存しました。', [{ icon:'✅', text: type + ' 記録完了', badge:'ri-ok' }]);
+  } catch(err) { showResult('❌', '送信エラー', err.message, []); }
+}
+
+function submitTempCheck() {
+  const data = {};
+  document.querySelectorAll('#s-tempcheck input[data-eq]').forEach(inp => {
+    const key = inp.dataset.eq + '_' + inp.dataset.time;
+    data[key] = inp.value ? parseFloat(inp.value) : null;
+  });
+  submitStoreReport('temp_check', data);
+}
+
+function submitDelivery() {
+  const data = {};
+  document.querySelectorAll('#s-delivery .ci').forEach(ci => { data[ci.dataset.key] = ci.classList.contains('chk'); });
+  data.frozen_temp = parseFloat(document.getElementById('delivery-temp').value) || null;
+  submitStoreReport('delivery', data);
+}
+
+function submitToilet() {
+  const data = { timing: ['open','mid','close'][toiletTab] };
+  document.querySelectorAll('#toilet-body .ci').forEach(ci => { data[ci.dataset.key] = ci.classList.contains('chk'); });
+  submitStoreReport('toilet_' + data.timing, data);
+}
+
+function submitFoodTemp() {
+  const ids = ['ft1','ft2','ft3','ft4','ft5','ft6','ft7','ft8'];
+  const names = ['raw_cold','heated','frying_oil','hot_hold','reheat','cooling','first_fried','ramen_soup'];
+  const data = {};
+  ids.forEach((id,i) => { data[names[i]] = parseFloat(document.getElementById(id).value) || null; });
+  submitStoreReport('food_temp', data);
+}
+
+// =====================================================
+// AI アニメーション
+// =====================================================
+function animateAI() {
+  const steps = ['as2','as3'];
+  document.getElementById('as2').className = 'ai-step as-run';
+  document.getElementById('as3').className = 'ai-step as-pend';
+  let i = 0;
+  function next() {
+    if (i >= steps.length) return;
+    const el = document.getElementById(steps[i]);
+    el.className = 'ai-step as-run';
+    el.querySelector('span').textContent = '⏳';
+    setTimeout(() => {
+      el.className = 'ai-step as-done';
+      el.querySelector('span').textContent = '✅';
+      i++; setTimeout(next, 400);
+    }, 700);
+  }
+  setTimeout(next, 300);
+}
+
+// =====================================================
+// 結果画面
+// =====================================================
+function showResult(ico, title, sub, items) {
+  setTimeout(() => {
+    document.getElementById('result-ico').textContent = ico;
+    document.getElementById('result-ico').style.background = ico==='✅' ? 'var(--ok-bg)' : ico==='⚠️' ? 'var(--warn-bg)' : 'var(--ng-bg)';
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-sub').textContent = sub;
+    const det = document.getElementById('result-detail');
+    det.innerHTML = items.map(item =>
+      `<div class="res-item"><span style="font-size:15px">${item.icon}</span><div class="ri-txt">${item.text}</div><div class="ri-b ${item.badge}">${item.badge==='ri-ok'?'完了':item.badge==='ri-ng'?'NG':'確認'}</div></div>`
+    ).join('');
+    showScreen('s-result');
+    updateProgress();
+  }, 1800);
+}
+
+// =====================================================
+// 進捗更新
+// =====================================================
+function updateProgress() {
+  const p = todayProgress;
+  document.getElementById('prog-photo').style.width = (p.photo/3*100) + '%';
+  document.getElementById('prog-photo-lbl').textContent = p.photo + ' / 3';
+  document.getElementById('prog-personal').style.width = (p.personal/2*100) + '%';
+  document.getElementById('prog-personal-lbl').textContent = p.personal + ' / 2';
+  document.getElementById('prog-store').style.width = (p.store/4*100) + '%';
+  document.getElementById('prog-store-lbl').textContent = p.store + ' / 4';
+}
+
+// =====================================================
+// ダッシュボード
+// =====================================================
+async function loadDashboard() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { data: stores } = await sb.from('stores').select('id,name').eq('is_active', true);
+    const { data: photoRep } = await sb.from('photo_reports').select('store_id,report_type,status').eq('report_date', today);
+    const { data: storeRep } = await sb.from('store_reports').select('store_id,report_type').eq('report_date', today);
+    const { data: personalRep } = await sb.from('personal_hygiene').select('store_id').eq('report_date', today);
+
+    let submitted = 0;
+    const storeStatuses = stores.map(store => {
+      const pr = (photoRep||[]).filter(r => r.store_id === store.id);
+      const sr = (storeRep||[]).filter(r => r.store_id === store.id);
+      const per = (personalRep||[]).filter(r => r.store_id === store.id);
+      const hasPhoto = pr.length > 0;
+      const hasStore = sr.length > 0;
+      const hasPer = per.length > 0;
+      const hasNG = pr.some(r => r.status === 'ng');
+      if (hasPhoto || hasStore || hasPer) submitted++;
+      return { store, hasPhoto, hasStore, hasPer, hasNG };
+    });
+
+    document.getElementById('dash-rate').textContent = Math.round(submitted/stores.length*100) + '%';
+    document.getElementById('dash-alerts').textContent = storeStatuses.filter(s => s.hasNG).length;
+    document.getElementById('dash-missing').textContent = storeStatuses.filter(s => !s.hasPhoto && !s.hasStore && !s.hasPer).length;
+
+    const container = document.getElementById('dash-stores');
+    container.innerHTML = storeStatuses.map(({ store, hasPhoto, hasStore, hasPer, hasNG }) => `
+      <div class="store-row">
+        <div class="sr-head" onclick="this.nextElementSibling.classList.toggle('open')">
+          <div>
+            <div class="sr-name">${store.name}</div>
+            <div class="sr-sub" style="color:${hasNG?'var(--ng)':hasPhoto||hasStore||hasPer?'var(--ok)':'var(--text3)'}">${hasNG?'⚠️ NGあり':hasPhoto||hasStore||hasPer?'✓ 提出済み':'未提出'}</div>
+          </div>
+          <div class="sr-badges">
+            <span class="badge ${hasPhoto?'b-ok':'b-gray'}">📸</span>
+            <span class="badge ${hasPer?'b-ok':'b-gray'}">👤</span>
+            <span class="badge ${hasStore?'b-ok':'b-gray'}">🏪</span>
+          </div>
+        </div>
+        <div class="sr-body">
+          <div class="sr-alert"><span style="color:${hasPhoto?'var(--ok)':'var(--text3)'}">${hasPhoto?'✓':'—'}</span>写真報告</div>
+          <div class="sr-alert"><span style="color:${hasPer?'var(--ok)':'var(--text3)'}">${hasPer?'✓':'—'}</span>個人衛生</div>
+          <div class="sr-alert"><span style="color:${hasStore?'var(--ok)':'var(--text3)'}">${hasStore?'✓':'—'}</span>店舗全体</div>
+        </div>
+      </div>
+    `).join('');
+  } catch(err) {
+    document.getElementById('dash-stores').innerHTML = `<div class="note n-ng">エラー: ${err.message}</div>`;
+  }
+}
+</script>
 </body>
 </html>

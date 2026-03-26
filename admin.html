@@ -3,165 +3,104 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SHINJUKU-TEI 管理者ダッシュボード</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>SHINJUKU-TEI 管理者</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root {
-  --brand:#C8252A;--brand-dark:#9B1A1E;--brand-light:#FFF0F0;
-  --bg:#F2F0EC;--card:#FFFFFF;--text:#1C1C1C;--text2:#5C5C5C;--text3:#9C9C9C;
-  --border:#E6E2DC;--ok:#1A8C5B;--ok-bg:#E6F7F0;--warn:#C07A08;--warn-bg:#FEF4E2;
-  --ng:#C8252A;--ng-bg:#FFF0F0;--info:#1A5FA8;--info-bg:#E8F0FF;
-  --photo:#5B4FCF;--photo-bg:#EFEDFF;
-  --r:14px;--sh:0 1px 6px rgba(0,0,0,0.07);
-}
+:root{--brand:#C8252A;--brand-dark:#9B1A1E;--bg:#F2F0EC;--card:#FFFFFF;--text:#1C1C1C;--text2:#5C5C5C;--text3:#9C9C9C;--border:#E6E2DC;--ok:#1A8C5B;--ok-bg:#E6F7F0;--warn:#C07A08;--warn-bg:#FEF4E2;--ng:#C8252A;--ng-bg:#FFF0F0;--info:#1A5FA8;--info-bg:#E8F0FF;--photo:#5B4FCF;--photo-bg:#EFEDFF;--r:14px;--sh:0 1px 6px rgba(0,0,0,0.07);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);max-width:520px;margin:0 auto;font-size:14px;}
-.screen{display:none;min-height:100vh;flex-direction:column;}
-.screen.active{display:flex;}
+.screen{display:none;min-height:100vh;flex-direction:column;}.screen.active{display:flex;}
 .tb{background:var(--card);border-bottom:1px solid var(--border);padding:11px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30;}
-.tb-back{width:32px;height:32px;border:none;background:var(--bg);border-radius:8px;cursor:pointer;font-size:17px;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.tb-brand{font-family:'DM Sans',sans-serif;font-weight:700;font-size:15px;}
-.tb-sub{font-size:11px;color:var(--text3);margin-top:1px;}
-.tb-info{flex:1;}
+.tb-brand{font-family:'DM Sans',sans-serif;font-weight:700;font-size:15px;}.tb-sub{font-size:11px;color:var(--text3);margin-top:1px;}.tb-info{flex:1;}
 .badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;}
-.b-red{background:var(--ng);color:#fff;} .b-ok{background:var(--ok);color:#fff;}
-.b-warn{background:var(--warn);color:#fff;} .b-gray{background:var(--border);color:var(--text3);}
+.b-red{background:var(--ng);color:#fff;}.b-ok{background:var(--ok);color:#fff;}.b-warn{background:var(--warn);color:#fff;}.b-gray{background:var(--border);color:var(--text3);}
 .sa{flex:1;overflow-y:auto;padding:12px;}
 .card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:10px;overflow:hidden;}
 .card-head{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--bg);}
 .card-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-.card-title{font-size:13px;font-weight:700;flex:1;}
-.card-sub{font-size:11px;color:var(--text3);margin-top:1px;}
-.card-chev{font-size:14px;color:var(--text3);transition:transform .2s;}
-.card-chev.open{transform:rotate(180deg);}
-.card-body{display:none;} .card-body.open{display:block;}
+.card-title{font-size:13px;font-weight:700;flex:1;}.card-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.card-chev{font-size:14px;color:var(--text3);transition:transform .2s;}.card-chev.open{transform:rotate(180deg);}
+.card-body{display:none;}.card-body.open{display:block;}
 .note{padding:9px 12px;border-radius:9px;font-size:12px;line-height:1.6;display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;}
-.n-warn{background:var(--warn-bg);color:var(--warn);} .n-ok{background:var(--ok-bg);color:var(--ok);}
-.n-ng{background:var(--ng-bg);color:var(--ng);} .n-info{background:var(--info-bg);color:var(--info);}
+.n-warn{background:var(--warn-bg);color:var(--warn);}.n-ok{background:var(--ok-bg);color:var(--ok);}.n-ng{background:var(--ng-bg);color:var(--ng);}.n-info{background:var(--info-bg);color:var(--info);}
 .sec-lbl{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;padding:10px 2px 6px;}
 .btn{width:100%;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .15s;}
-.btn-main{background:var(--brand);color:#fff;} .btn-main:active{background:var(--brand-dark);}
+.btn-main{background:var(--brand);color:#fff;}.btn-main:active{background:var(--brand-dark);}
 .btn-sub{background:transparent;color:var(--text2);border:1.5px solid var(--border);}
 .btn-sm{padding:6px 14px;font-size:12px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-family:'Noto Sans JP',sans-serif;}
-.btn-alarm{background:var(--ng);color:#fff;}
-.btn-resolve{background:var(--ok);color:#fff;}
-.btn-info{background:var(--info);color:#fff;}
-/* LOGIN */
-.login-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;}
-.login-inp{width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Noto Sans JP',sans-serif;color:var(--text);outline:none;margin-bottom:12px;}
-.login-inp:focus{border-color:var(--brand);}
-/* TABS */
+.btn-alarm{background:var(--ng);color:#fff;}.btn-resolve{background:var(--ok);color:#fff;}.btn-info{background:var(--info);color:#fff;}
 .dash-tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:20;}
 .dash-tab{flex:1;padding:10px 2px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);border-bottom:3px solid transparent;cursor:pointer;transition:all .2s;line-height:1.3;}
 .dash-tab.active{color:var(--brand);border-bottom-color:var(--brand);}
-/* STATS */
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
 .stat-box{background:var(--card);border-radius:var(--r);padding:12px 8px;text-align:center;box-shadow:var(--sh);}
-.stat-num{font-size:26px;font-weight:700;font-family:'DM Sans',sans-serif;}
-.stat-lbl{font-size:10px;color:var(--text3);margin-top:2px;line-height:1.3;}
-/* DATE PICKER */
+.stat-num{font-size:26px;font-weight:700;font-family:'DM Sans',sans-serif;}.stat-lbl{font-size:10px;color:var(--text3);margin-top:2px;line-height:1.3;}
 .date-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .date-btn{width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.date-lbl{flex:1;text-align:center;font-size:13px;font-weight:700;background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:6px;cursor:pointer;}
-.date-today{font-size:11px;padding:6px 12px;border-radius:8px;border:1.5px solid var(--brand);background:var(--brand-light);color:var(--brand);font-weight:700;cursor:pointer;white-space:nowrap;}
-/* STORE ROWS */
+.date-lbl{flex:1;text-align:center;font-size:13px;font-weight:700;background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:6px;}
+.date-today{font-size:11px;padding:6px 12px;border-radius:8px;border:1.5px solid var(--brand);background:var(--brand-light,#FFF0F0);color:var(--brand);font-weight:700;cursor:pointer;white-space:nowrap;}
 .store-card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:8px;overflow:hidden;border-left:4px solid transparent;}
-.store-card.sc-ok{border-left-color:var(--ok);}
-.store-card.sc-warn{border-left-color:var(--warn);}
-.store-card.sc-ng{border-left-color:var(--ng);}
-.store-card.sc-none{border-left-color:var(--border);}
+.store-card.sc-ok{border-left-color:var(--ok);}.store-card.sc-warn{border-left-color:var(--warn);}.store-card.sc-ng{border-left-color:var(--ng);}.store-card.sc-none{border-left-color:var(--border);}
 .sc-head{padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;}
-.sc-name{font-size:14px;font-weight:700;flex:1;}
-.sc-status{font-size:11px;margin-top:2px;}
+.sc-name{font-size:14px;font-weight:700;flex:1;}.sc-status{font-size:11px;margin-top:2px;}
 .sc-badges{display:flex;gap:4px;flex-shrink:0;}
-.sc-body{border-top:1px solid var(--bg);display:none;}
-.sc-body.open{display:block;}
-/* DETAIL ROWS */
+.sc-body{border-top:1px solid var(--bg);display:none;}.sc-body.open{display:block;}
 .dr{display:flex;align-items:center;padding:9px 14px;gap:10px;border-bottom:1px solid var(--bg);}
-.dr:last-child{border-bottom:none;}
-.dr-icon{font-size:14px;width:20px;flex-shrink:0;}
-.dr-text{flex:1;font-size:12px;line-height:1.4;}
-.dr-sub{font-size:11px;color:var(--text3);}
+.dr:last-child{border-bottom:none;}.dr-icon{font-size:14px;width:20px;flex-shrink:0;}.dr-text{flex:1;font-size:12px;line-height:1.4;}
 .dr-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;}
-.dr-ok{background:var(--ok-bg);color:var(--ok);}
-.dr-ng{background:var(--ng-bg);color:var(--ng);}
-.dr-warn{background:var(--warn-bg);color:var(--warn);}
-.dr-gray{background:var(--border);color:var(--text3);}
-/* ALARM SECTION */
+.dr-ok{background:var(--ok-bg);color:var(--ok);}.dr-ng{background:var(--ng-bg);color:var(--ng);}.dr-warn{background:var(--warn-bg);color:var(--warn);}.dr-gray{background:var(--border);color:var(--text3);}
 .alarm-item{padding:12px 14px;border-bottom:1px solid var(--bg);display:flex;align-items:flex-start;gap:10px;}
-.alarm-item:last-child{border-bottom:none;}
-.alarm-ico{font-size:20px;flex-shrink:0;margin-top:1px;}
-.alarm-body{flex:1;}
-.alarm-store{font-size:12px;font-weight:700;color:var(--ng);}
-.alarm-msg{font-size:12px;line-height:1.5;margin-top:2px;}
-.alarm-time{font-size:10px;color:var(--text3);margin-top:3px;}
-.alarm-actions{display:flex;gap:6px;margin-top:8px;}
-.alarm-resolved{opacity:.5;}
-.alarm-resolved .alarm-store{color:var(--ok);}
-/* WEEKLY CHART */
-.week-chart{padding:14px;}
+.alarm-item:last-child{border-bottom:none;}.alarm-ico{font-size:20px;flex-shrink:0;margin-top:1px;}.alarm-body{flex:1;}
+.alarm-store{font-size:12px;font-weight:700;color:var(--ng);}.alarm-msg{font-size:12px;line-height:1.5;margin-top:2px;}.alarm-time{font-size:10px;color:var(--text3);margin-top:3px;}
+.alarm-actions{display:flex;gap:6px;margin-top:8px;}.alarm-resolved .alarm-store{color:var(--ok);}
 .wc-bar-wrap{display:flex;align-items:flex-end;gap:6px;height:100px;margin-bottom:6px;}
 .wc-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
-.wc-bar{width:100%;border-radius:4px 4px 0 0;transition:height .4s ease;min-height:2px;}
-.wc-day{font-size:10px;color:var(--text3);}
-.wc-pct{font-size:10px;font-weight:700;}
+.wc-bar{width:100%;border-radius:4px 4px 0 0;min-height:2px;}.wc-day{font-size:10px;color:var(--text3);}.wc-pct{font-size:10px;font-weight:700;}
 .wc-legend{display:flex;gap:12px;font-size:11px;color:var(--text2);margin-top:8px;flex-wrap:wrap;}
 .wc-dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:4px;}
-/* STAFF LIST */
+.week-chart{padding:14px;}
 .staff-item{display:flex;align-items:center;padding:9px 14px;gap:10px;border-bottom:1px solid var(--bg);}
 .staff-item:last-child{border-bottom:none;}
 .staff-avatar{width:32px;height:32px;border-radius:50%;background:var(--info-bg);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--info);flex-shrink:0;}
-.staff-name{flex:1;font-size:13px;font-weight:600;}
-.staff-sub{font-size:11px;color:var(--text3);}
+.staff-name{flex:1;font-size:13px;font-weight:600;}.staff-sub{font-size:11px;color:var(--text3);}
 .staff-checks{display:flex;gap:3px;}
 .sck{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
-.sck-ok{background:var(--ok-bg);color:var(--ok);}
-.sck-ng{background:var(--ng-bg);color:var(--ng);}
-.sck-none{background:var(--border);color:var(--text3);}
-/* DATE INPUT */
+.sck-ok{background:var(--ok-bg);color:var(--ok);}.sck-ng{background:var(--ng-bg);color:var(--ng);}.sck-none{background:var(--border);color:var(--text3);}
 input[type="date"]{border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--text);outline:none;background:var(--card);}
 input[type="date"]:focus{border-color:var(--brand);}
-/* TOAST */
+.login-inp{width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Noto Sans JP',sans-serif;color:var(--text);outline:none;margin-bottom:12px;}
+.login-inp:focus{border-color:var(--brand);}
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1C1C1C;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;}
-/* LOADING */
 .loading{text-align:center;padding:20px;color:var(--text3);font-size:13px;}
 </style>
 </head>
 <body>
 <div class="toast" id="toast"></div>
 
-<!-- =========================================================
-     LOGIN
-======================================================== -->
 <div class="screen active" id="s-login">
   <div style="background:linear-gradient(135deg,#1A1A1A 0%,#C8252A 100%);padding:40px 20px 32px;text-align:center;color:#fff">
     <div style="font-size:13px;opacity:.7;margin-bottom:4px">SHINJUKU-TEI GROUP</div>
     <div style="font-size:26px;font-weight:700;font-family:'DM Sans',sans-serif">管理者ダッシュボード</div>
     <div style="font-size:12px;opacity:.7;margin-top:6px">Admin Dashboard</div>
   </div>
-  <div class="login-wrap">
-    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;align-self:flex-start">管理者パスワード</div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;">
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;align-self:flex-start;width:100%">管理者パスワード</div>
     <input class="login-inp" type="password" id="admin-pw" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')doAdminLogin()">
     <button class="btn btn-main" onclick="doAdminLogin()">ログイン</button>
     <div id="login-err" style="color:var(--ng);font-size:12px;margin-top:10px;text-align:center"></div>
   </div>
 </div>
 
-<!-- =========================================================
-     DASHBOARD
-======================================================== -->
 <div class="screen" id="s-dash">
   <div class="tb">
     <div class="tb-info">
       <div class="tb-brand">管理者ダッシュボード</div>
-      <div class="tb-sub" id="tb-store-name">全店舗</div>
+      <div class="tb-sub">SHINJUKU-TEI GROUP</div>
     </div>
-    <button class="btn-sm btn-sub" style="width:auto;padding:6px 12px" onclick="doLogout()">ログアウト</button>
+    <button class="btn-sm btn-sub" style="width:auto;padding:6px 12px;border:1.5px solid var(--border);background:transparent;color:var(--text2)" onclick="doLogout()">ログアウト</button>
   </div>
-
-  <!-- タブ -->
   <div class="dash-tabs">
     <div class="dash-tab active" id="dt-today" onclick="switchDashTab('today',this)">今日</div>
     <div class="dash-tab" id="dt-staff" onclick="switchDashTab('staff',this)">出勤確認</div>
@@ -169,143 +108,89 @@ input[type="date"]:focus{border-color:var(--brand);}
     <div class="dash-tab" id="dt-week" onclick="switchDashTab('week',this)">週次</div>
     <div class="dash-tab" id="dt-history" onclick="switchDashTab('history',this)">過去</div>
   </div>
-
   <div class="sa">
-
-    <!-- ===== TODAY ===== -->
     <div id="tab-today">
-      <!-- 日付選択 -->
       <div class="date-row">
         <button class="date-btn" onclick="changeDay(-1)">‹</button>
-        <div class="date-lbl" id="today-lbl">読み込み中...</div>
+        <div class="date-lbl" id="today-lbl">—</div>
         <button class="date-btn" onclick="changeDay(1)">›</button>
-        <div class="date-today" onclick="goToday()">今日</div>
+        <button class="date-today" onclick="goToday()">今日</button>
       </div>
-
-      <!-- サマリー -->
-      <div class="stats-grid" id="today-stats">
+      <div class="stats-grid">
         <div class="stat-box"><div class="stat-num" style="color:var(--ok)" id="s-submitted">—</div><div class="stat-lbl">提出済み店舗</div></div>
         <div class="stat-box"><div class="stat-num" style="color:var(--ng)" id="s-alarms">—</div><div class="stat-lbl">アラーム件数</div></div>
         <div class="stat-box"><div class="stat-num" style="color:var(--warn)" id="s-missing">—</div><div class="stat-lbl">未提出店舗</div></div>
       </div>
-
-      <!-- 店舗別リスト -->
       <div class="sec-lbl">店舗別ステータス</div>
       <div id="store-list"><div class="loading">読み込み中...</div></div>
     </div>
-
-    <!-- ===== STAFF ===== -->
     <div id="tab-staff" style="display:none">
       <div class="date-row">
         <button class="date-btn" onclick="changeDay(-1);loadStaff()">‹</button>
         <div class="date-lbl" id="staff-date-lbl">—</div>
         <button class="date-btn" onclick="changeDay(1);loadStaff()">›</button>
-        <div class="date-today" onclick="goToday();loadStaff()">今日</div>
+        <button class="date-today" onclick="goToday();loadStaff()">今日</button>
       </div>
-      <div class="note n-info">ℹ️ 個人衛生報告（身だしなみ・健康チェック）の提出状況です</div>
+      <div class="note n-info">ℹ️ 個人衛生報告（身だしなみ・健康チェック）の提出状況</div>
       <div id="staff-list"><div class="loading">読み込み中...</div></div>
     </div>
-
-    <!-- ===== ALARM ===== -->
     <div id="tab-alarm" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:13px;font-weight:700">未解決アラーム</div>
-        <button class="btn-sm btn-sub" style="width:auto" onclick="loadAlarms()">更新</button>
+        <button class="btn-sm btn-info" style="width:auto" onclick="loadAlarms()">更新</button>
       </div>
       <div id="alarm-list"><div class="loading">読み込み中...</div></div>
-      <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div style="font-size:13px;font-weight:700;color:var(--text3)">解決済みアラーム</div>
-      </div>
+      <div style="margin-top:16px;margin-bottom:6px;font-size:13px;font-weight:700;color:var(--text3)">解決済みアラーム</div>
       <div id="alarm-resolved-list"><div class="loading">読み込み中...</div></div>
     </div>
-
-    <!-- ===== WEEKLY ===== -->
     <div id="tab-week" style="display:none">
       <div class="sec-lbl">今週の達成率（月〜日）</div>
       <div class="card">
-        <div class="card-head" onclick="toggleCard(this)">
-          <div class="card-ico" style="background:var(--photo-bg)">📸</div>
-          <div><div class="card-title">写真報告 達成率</div></div>
-          <div class="card-chev open">▼</div>
-        </div>
-        <div class="card-body open">
-          <div class="week-chart" id="wc-photo"></div>
-        </div>
+        <div class="card-head" onclick="toggleCard(this)"><div class="card-ico" style="background:var(--photo-bg)">📸</div><div><div class="card-title">写真報告 達成率</div></div><div class="card-chev open">▼</div></div>
+        <div class="card-body open"><div class="week-chart" id="wc-photo"></div></div>
       </div>
       <div class="card">
-        <div class="card-head" onclick="toggleCard(this)">
-          <div class="card-ico" style="background:#E6F5F2">👤</div>
-          <div><div class="card-title">個人衛生 達成率</div></div>
-          <div class="card-chev open">▼</div>
-        </div>
-        <div class="card-body open">
-          <div class="week-chart" id="wc-personal"></div>
-        </div>
+        <div class="card-head" onclick="toggleCard(this)"><div class="card-ico" style="background:#E6F5F2">👤</div><div><div class="card-title">個人衛生 達成率</div></div><div class="card-chev open">▼</div></div>
+        <div class="card-body open"><div class="week-chart" id="wc-personal"></div></div>
       </div>
       <div class="card">
-        <div class="card-head" onclick="toggleCard(this)">
-          <div class="card-ico" style="background:var(--warn-bg)">🏪</div>
-          <div><div class="card-title">店舗全体 達成率</div></div>
-          <div class="card-chev open">▼</div>
-        </div>
-        <div class="card-body open">
-          <div class="week-chart" id="wc-store"></div>
-        </div>
+        <div class="card-head" onclick="toggleCard(this)"><div class="card-ico" style="background:var(--warn-bg)">🏪</div><div><div class="card-title">店舗全体 達成率</div></div><div class="card-chev open">▼</div></div>
+        <div class="card-body open"><div class="week-chart" id="wc-store"></div></div>
       </div>
-
       <div class="sec-lbl">店舗別週次サマリー</div>
       <div id="week-store-list"><div class="loading">読み込み中...</div></div>
     </div>
-
-    <!-- ===== HISTORY ===== -->
     <div id="tab-history" style="display:none">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <input type="date" id="hist-date" style="flex:1">
         <button class="btn-sm btn-info" style="width:auto" onclick="loadHistory()">表示</button>
       </div>
-      <div class="sec-lbl">店舗を選択</div>
       <select id="hist-store" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;margin-bottom:10px;background:var(--card);color:var(--text);outline:none;font-family:'Noto Sans JP',sans-serif">
         <option value="">全店舗</option>
       </select>
       <div id="history-list"><div class="loading">日付を選択して「表示」を押してください</div></div>
     </div>
-
   </div>
 </div>
 
 <script>
-// =====================================================
-// SUPABASE 設定
-// =====================================================
-const SUPABASE_URL = 'https://mygnpsmvyxdktrnyacsl.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_IndIwDpVX18CshTHpvNnAQ_6GthPauR';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+var SUPABASE_URL = 'https://mygnpsmvyxdktrnyacsl.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_IndIwDpVX18CshTHpvNnAQ_6GthPauR';
+var ADMIN_PASSWORD = 'shinjukutei2024';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+var currentDate = new Date();
+var allStores = [];
+var currentTab = 'today';
 
-const ADMIN_PASSWORD = 'shinjukutei2024'; // ← 任意に変更してください
-
-// =====================================================
-// 状態管理
-// =====================================================
-let currentDate = new Date();
-let allStores = [];
-let currentTab = 'today';
-
-// =====================================================
-// 初期化
-// =====================================================
-document.addEventListener('DOMContentLoaded', async () => {
-  // 過去日付をhistory dateに設定
+document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('hist-date').value = fmtDate(new Date());
 });
 
-// =====================================================
-// ログイン
-// =====================================================
 function doAdminLogin() {
-  const pw = document.getElementById('admin-pw').value;
+  var pw = document.getElementById('admin-pw').value;
   if (pw === ADMIN_PASSWORD) {
     showScreen('s-dash');
-    init();
+    initDash();
   } else {
     document.getElementById('login-err').textContent = 'パスワードが違います';
   }
@@ -315,13 +200,12 @@ function doLogout() {
   document.getElementById('admin-pw').value = '';
 }
 
-async function init() {
-  const { data } = await sb.from('stores').select('id,name,area').eq('is_active', true).order('area');
-  allStores = data || [];
-  // history store select
-  const sel = document.getElementById('hist-store');
-  allStores.forEach(s => {
-    const opt = document.createElement('option');
+async function initDash() {
+  var res = await sb.from('stores').select('id,name,area').eq('is_active', true).order('area');
+  allStores = res.data || [];
+  var sel = document.getElementById('hist-store');
+  allStores.forEach(function(s) {
+    var opt = document.createElement('option');
     opt.value = s.id; opt.textContent = s.name;
     sel.appendChild(opt);
   });
@@ -329,47 +213,38 @@ async function init() {
   await loadToday();
 }
 
-// =====================================================
-// 画面・タブ切替
-// =====================================================
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
 }
 
 function switchDashTab(tab, el) {
   currentTab = tab;
-  ['today','staff','alarm','week','history'].forEach(t => {
+  ['today','staff','alarm','week','history'].forEach(function(t) {
     document.getElementById('tab-'+t).style.display = t===tab ? '' : 'none';
     document.getElementById('dt-'+t).classList.toggle('active', t===tab);
   });
-  if (tab === 'today') loadToday();
-  else if (tab === 'staff') loadStaff();
-  else if (tab === 'alarm') loadAlarms();
-  else if (tab === 'week') loadWeekly();
-  else if (tab === 'history') {}
+  if (tab==='today') loadToday();
+  else if (tab==='staff') loadStaff();
+  else if (tab==='alarm') loadAlarms();
+  else if (tab==='week') loadWeekly();
 }
 
 function toggleCard(head) {
-  const body = head.nextElementSibling;
-  const chev = head.querySelector('.card-chev');
+  var body = head.nextElementSibling;
+  var chev = head.querySelector('.card-chev');
   body.classList.toggle('open');
   chev.classList.toggle('open', body.classList.contains('open'));
 }
 
-// =====================================================
-// 日付操作
-// =====================================================
-function fmtDate(d) {
-  return d.toISOString().split('T')[0];
-}
+function fmtDate(d) { return d.toISOString().split('T')[0]; }
 function fmtDateJP(d) {
-  const days = ['日','月','火','水','木','金','土'];
-  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+  var days = ['日','月','火','水','木','金','土'];
+  return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+days[d.getDay()]+'）';
 }
 function updateDateLabel() {
-  const lbl = fmtDateJP(currentDate);
+  var lbl = fmtDateJP(currentDate);
   document.getElementById('today-lbl').textContent = lbl;
   document.getElementById('staff-date-lbl').textContent = lbl;
 }
@@ -377,422 +252,312 @@ function changeDay(delta) {
   currentDate = new Date(currentDate);
   currentDate.setDate(currentDate.getDate() + delta);
   updateDateLabel();
-  if (currentTab === 'today') loadToday();
-  else if (currentTab === 'staff') loadStaff();
+  if (currentTab==='today') loadToday();
+  else if (currentTab==='staff') loadStaff();
 }
 function goToday() {
   currentDate = new Date();
   updateDateLabel();
-  if (currentTab === 'today') loadToday();
-  else if (currentTab === 'staff') loadStaff();
+  if (currentTab==='today') loadToday();
+  else if (currentTab==='staff') loadStaff();
 }
 
-// =====================================================
-// TODAY タブ
-// =====================================================
 async function loadToday() {
-  const today = fmtDate(currentDate);
+  var today = fmtDate(currentDate);
   document.getElementById('store-list').innerHTML = '<div class="loading">読み込み中...</div>';
-
   try {
-    const [{ data: photoRep }, { data: storeRep }, { data: personalRep }, { data: activeAlerts }] = await Promise.all([
-      sb.from('photo_reports').select('store_id,report_type,status,submitted_at,photos,ai_summary').eq('report_date', today),
+    var results = await Promise.all([
+      sb.from('photo_reports').select('store_id,report_type,status,submitted_at').eq('report_date', today),
       sb.from('store_reports').select('store_id,report_type,status,submitted_at').eq('report_date', today),
       sb.from('personal_hygiene').select('store_id,staff_name,status,submitted_at').eq('report_date', today),
       sb.from('alerts').select('*').eq('is_resolved', false)
     ]);
+    var photoRep = results[0].data || [];
+    var storeRep = results[1].data || [];
+    var personalRep = results[2].data || [];
+    var activeAlerts = results[3].data || [];
 
-    let submitted = 0, alarmCount = 0, missing = 0;
-    const rows = allStores.map(store => {
-      const pr = (photoRep||[]).filter(r => r.store_id === store.id);
-      const sr = (storeRep||[]).filter(r => r.store_id === store.id);
-      const per = (personalRep||[]).filter(r => r.store_id === store.id);
-      const storeAlerts = (activeAlerts||[]).filter(a => a.store_id === store.id);
-      const hasAny = pr.length > 0 || sr.length > 0 || per.length > 0;
-      const hasNG = storeAlerts.length > 0;
+    var submitted=0, alarmCount=0, missing=0;
+    var photoLabels = {open:'オープン',close:'クローズ',lowtemp_temp:'低温(温)',lowtemp_cool:'低温(冷)'};
+    var storeLabels = {temp_check:'温度表',delivery:'納品',toilet_open:'便所(開)',toilet_mid:'便所(中)',toilet_close:'便所(閉)',food_temp:'食品温'};
+
+    var rows = allStores.map(function(store) {
+      var pr = photoRep.filter(function(r){ return r.store_id===store.id; });
+      var sr = storeRep.filter(function(r){ return r.store_id===store.id; });
+      var per = personalRep.filter(function(r){ return r.store_id===store.id; });
+      var sa = activeAlerts.filter(function(a){ return a.store_id===store.id; });
+      var hasAny = pr.length>0||sr.length>0||per.length>0;
+      var hasNG = sa.length>0;
       if (hasAny) submitted++; else missing++;
       if (hasNG) alarmCount++;
-
-      // 各カテゴリの状態
-      const photoTypes = ['open','close','lowtemp_temp','lowtemp_cool'];
-      const photoStatus = photoTypes.map(t => {
-        const r = pr.find(x => x.report_type === t);
-        return { type: t, submitted: !!r, status: r?.status };
-      });
-      const storeTypes = ['temp_check','delivery','toilet_open','toilet_mid','toilet_close','food_temp'];
-      const storeStatus = storeTypes.map(t => {
-        const r = sr.find(x => x.report_type === t);
-        return { type: t, submitted: !!r };
-      });
-
-      const cardClass = hasNG ? 'sc-ng' : !hasAny ? 'sc-none' : 'sc-ok';
-      const statusText = hasNG ? `⚠️ アラーム ${storeAlerts.length}件` : !hasAny ? '未提出' : `✓ 提出済み`;
-      const statusColor = hasNG ? 'var(--ng)' : !hasAny ? 'var(--text3)' : 'var(--ok)';
-
-      const photoLabels = { open:'開店', close:'閉店', lowtemp_temp:'低温温', lowtemp_cool:'低温冷' };
-      const storeLabels = { temp_check:'温度', delivery:'納品', toilet_open:'便開', toilet_mid:'便中', toilet_close:'便閉', food_temp:'食品温' };
-
-      return `
-        <div class="store-card ${cardClass}">
-          <div class="sc-head" onclick="this.nextElementSibling.classList.toggle('open')">
-            <div style="flex:1">
-              <div class="sc-name">${store.name}</div>
-              <div class="sc-status" style="color:${statusColor}">${statusText}</div>
-            </div>
-            <div class="sc-badges">
-              <span class="badge ${pr.length>0?'b-ok':'b-gray'}" style="font-size:9px">📸</span>
-              <span class="badge ${per.length>0?'b-ok':'b-gray'}" style="font-size:9px">👤</span>
-              <span class="badge ${sr.length>0?'b-ok':'b-gray'}" style="font-size:9px">🏪</span>
-              ${hasNG ? `<span class="badge b-red" style="font-size:9px">🔔${storeAlerts.length}</span>` : ''}
-            </div>
-          </div>
-          <div class="sc-body">
-            <!-- 写真報告 -->
-            <div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--text3)">📸 写真報告</div>
-            ${photoStatus.map(p => `
-              <div class="dr">
-                <div class="dr-icon">${p.submitted ? '✅' : '⭕'}</div>
-                <div class="dr-text">${photoLabels[p.type]||p.type}</div>
-                <div class="dr-badge ${p.submitted ? 'dr-ok' : 'dr-gray'}">${p.submitted ? '提出済' : '未提出'}</div>
-              </div>`).join('')}
-            <!-- 個人衛生 -->
-            <div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--text3)">👤 個人衛生</div>
-            ${per.length > 0
-              ? per.map(p => `<div class="dr"><div class="dr-icon">✅</div><div class="dr-text">${p.staff_name||'—'}</div><div class="dr-badge ${p.status==='ok'?'dr-ok':'dr-ng'}">${p.status==='ok'?'正常':'要確認'}</div></div>`).join('')
-              : '<div class="dr"><div class="dr-icon">⭕</div><div class="dr-text">未提出</div><div class="dr-badge dr-gray">—</div></div>'}
-            <!-- 店舗全体 -->
-            <div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--text3)">🏪 店舗全体</div>
-            ${storeStatus.map(s => `
-              <div class="dr">
-                <div class="dr-icon">${s.submitted ? '✅' : '⭕'}</div>
-                <div class="dr-text">${storeLabels[s.type]||s.type}</div>
-                <div class="dr-badge ${s.submitted ? 'dr-ok' : 'dr-gray'}">${s.submitted ? '提出済' : '未提出'}</div>
-              </div>`).join('')}
-            <!-- アラーム -->
-            ${storeAlerts.length > 0 ? `
-              <div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--ng)">🔔 アラーム</div>
-              ${storeAlerts.map(a => `
-                <div class="dr">
-                  <div class="dr-icon">⚠️</div>
-                  <div class="dr-text">${a.message||a.alert_type}</div>
-                  <button class="btn-sm btn-resolve" onclick="resolveAlert('${a.id}',this)" style="white-space:nowrap">解決</button>
-                </div>`).join('')}
-            ` : ''}
-          </div>
-        </div>`;
+      var cardClass = hasNG?'sc-ng':!hasAny?'sc-none':'sc-ok';
+      var statusText = hasNG?'⚠️ アラーム '+sa.length+'件':!hasAny?'未提出':'✓ 提出済み';
+      var statusColor = hasNG?'var(--ng)':!hasAny?'var(--text3)':'var(--ok)';
+      var photoTypes = ['open','close','lowtemp_temp','lowtemp_cool'];
+      var storeTypes = ['temp_check','delivery','toilet_open','toilet_mid','toilet_close','food_temp'];
+      return '<div class="store-card '+cardClass+'">'+
+        '<div class="sc-head" onclick="this.nextElementSibling.classList.toggle(\'open\')">'+
+          '<div style="flex:1"><div class="sc-name">'+store.name+'</div>'+
+          '<div class="sc-status" style="color:'+statusColor+'">'+statusText+'</div></div>'+
+          '<div class="sc-badges">'+
+            '<span class="badge '+(pr.length>0?'b-ok':'b-gray')+'" style="font-size:9px">📸</span>'+
+            '<span class="badge '+(per.length>0?'b-ok':'b-gray')+'" style="font-size:9px">👤</span>'+
+            '<span class="badge '+(sr.length>0?'b-ok':'b-gray')+'" style="font-size:9px">🏪</span>'+
+            (hasNG?'<span class="badge b-red" style="font-size:9px">🔔'+sa.length+'</span>':'')+
+          '</div></div>'+
+        '<div class="sc-body">'+
+          '<div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--text3)">📸 写真報告</div>'+
+          photoTypes.map(function(t){
+            var r=pr.find(function(x){return x.report_type===t;});
+            return '<div class="dr"><div class="dr-icon">'+(r?'✅':'⭕')+'</div><div class="dr-text">'+(photoLabels[t]||t)+'</div><div class="dr-badge '+(r?'dr-ok':'dr-gray')+'">'+(r?'提出済':'未提出')+'</div></div>';
+          }).join('')+
+          '<div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--text3)">👤 個人衛生</div>'+
+          (per.length>0?per.map(function(p){
+            return '<div class="dr"><div class="dr-icon">✅</div><div class="dr-text">'+(p.staff_name||'—')+'</div><div class="dr-badge '+(p.status==='ok'?'dr-ok':'dr-ng')+'">'+(p.status==='ok'?'正常':'要確認')+'</div></div>';
+          }).join(''):'<div class="dr"><div class="dr-icon">⭕</div><div class="dr-text">未提出</div><div class="dr-badge dr-gray">—</div></div>')+
+          '<div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--text3)">🏪 店舗全体</div>'+
+          storeTypes.map(function(t){
+            var r=sr.find(function(x){return x.report_type===t;});
+            return '<div class="dr"><div class="dr-icon">'+(r?'✅':'⭕')+'</div><div class="dr-text">'+(storeLabels[t]||t)+'</div><div class="dr-badge '+(r?'dr-ok':'dr-gray')+'">'+(r?'提出済':'未提出')+'</div></div>';
+          }).join('')+
+          (sa.length>0?
+            '<div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--ng)">🔔 アラーム</div>'+
+            sa.map(function(a){
+              return '<div class="dr"><div class="dr-icon">⚠️</div><div class="dr-text">'+(a.message||a.alert_type||'アラーム')+'</div>'+
+                '<button class="btn-sm btn-resolve" onclick="resolveAlert(\''+a.id+'\',this)">解決</button></div>';
+            }).join(''):'')+
+        '</div></div>';
     });
-
     document.getElementById('s-submitted').textContent = submitted;
     document.getElementById('s-alarms').textContent = alarmCount;
     document.getElementById('s-missing').textContent = missing;
     document.getElementById('store-list').innerHTML = rows.join('');
   } catch(e) {
-    document.getElementById('store-list').innerHTML = `<div class="note n-ng">エラー: ${e.message}</div>`;
+    document.getElementById('store-list').innerHTML = '<div class="note n-ng">エラー: '+e.message+'</div>';
   }
 }
 
-// =====================================================
-// STAFF タブ
-// =====================================================
 async function loadStaff() {
-  const today = fmtDate(currentDate);
+  var today = fmtDate(currentDate);
   document.getElementById('staff-list').innerHTML = '<div class="loading">読み込み中...</div>';
   try {
-    const { data: per } = await sb.from('personal_hygiene')
-      .select('store_id,staff_name,grooming,health,status,submitted_at')
-      .eq('report_date', today)
-      .order('submitted_at');
-
-    if (!per || per.length === 0) {
-      document.getElementById('staff-list').innerHTML = '<div class="note n-warn">⚠️ この日の個人衛生報告はありません</div>';
-      return;
-    }
-
-    // 店舗ごとにグループ化
-    const byStore = {};
-    allStores.forEach(s => { byStore[s.id] = { name: s.name, records: [] }; });
-    per.forEach(p => { if (byStore[p.store_id]) byStore[p.store_id].records.push(p); });
-
-    let html = '';
-    allStores.forEach(store => {
-      const records = byStore[store.id]?.records || [];
-      if (records.length === 0) return;
-      html += `
-        <div class="card" style="margin-bottom:10px">
-          <div class="card-head" onclick="toggleCard(this)">
-            <div class="card-ico" style="background:var(--info-bg)">🏪</div>
-            <div><div class="card-title">${store.name}</div><div class="card-sub">${records.length}名提出</div></div>
-            <div class="card-chev open">▼</div>
-          </div>
-          <div class="card-body open">
-            ${records.map(r => {
-              const bt = r.health?.body_temp;
-              const btOk = bt === null || bt === undefined || bt < 37.5;
-              const time = r.submitted_at ? new Date(r.submitted_at).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}) : '—';
-              return `
-                <div class="staff-item">
-                  <div class="staff-avatar">${(r.staff_name||'?')[0]}</div>
-                  <div style="flex:1">
-                    <div class="staff-name">${r.staff_name||'名前なし'}</div>
-                    <div class="staff-sub">${time} 提出 / 体温: ${bt||'—'}℃</div>
-                  </div>
-                  <div class="staff-checks">
-                    <div class="sck ${r.grooming ? 'sck-ok' : 'sck-none'}" title="身だしなみ">身</div>
-                    <div class="sck ${btOk && r.status==='ok' ? 'sck-ok' : 'sck-ng'}" title="健康">健</div>
-                  </div>
-                </div>`;
-            }).join('')}
-          </div>
-        </div>`;
+    var res = await sb.from('personal_hygiene').select('store_id,staff_name,grooming,health,status,submitted_at').eq('report_date', today).order('submitted_at');
+    var per = res.data || [];
+    if (per.length===0) { document.getElementById('staff-list').innerHTML='<div class="note n-warn">⚠️ この日の個人衛生報告はありません</div>'; return; }
+    var byStore = {};
+    allStores.forEach(function(s){ byStore[s.id]={name:s.name,records:[]}; });
+    per.forEach(function(p){ if(byStore[p.store_id]) byStore[p.store_id].records.push(p); });
+    var html = '';
+    allStores.forEach(function(store) {
+      var records = byStore[store.id]&&byStore[store.id].records||[];
+      if (records.length===0) return;
+      html += '<div class="card" style="margin-bottom:10px">'+
+        '<div class="card-head" onclick="toggleCard(this)">'+
+          '<div class="card-ico" style="background:var(--info-bg)">🏪</div>'+
+          '<div><div class="card-title">'+store.name+'</div><div class="card-sub">'+records.length+'名提出</div></div>'+
+          '<div class="card-chev open">▼</div></div>'+
+        '<div class="card-body open">'+
+        records.map(function(r){
+          var bt=r.health&&r.health.body_temp;
+          var btOk=bt===null||bt===undefined||bt<37.5;
+          var time=r.submitted_at?new Date(r.submitted_at).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}):'—';
+          return '<div class="staff-item">'+
+            '<div class="staff-avatar">'+(r.staff_name||'?')[0]+'</div>'+
+            '<div style="flex:1"><div class="staff-name">'+(r.staff_name||'名前なし')+'</div>'+
+            '<div class="staff-sub">'+time+' 提出 / 体温: '+(bt||'—')+'℃</div></div>'+
+            '<div class="staff-checks">'+
+              '<div class="sck '+(r.grooming?'sck-ok':'sck-none')+'" title="身だしなみ">身</div>'+
+              '<div class="sck '+(btOk&&r.status==='ok'?'sck-ok':'sck-ng')+'" title="健康">健</div>'+
+            '</div></div>';
+        }).join('')+
+        '</div></div>';
     });
-    document.getElementById('staff-list').innerHTML = html || '<div class="note n-warn">データなし</div>';
+    document.getElementById('staff-list').innerHTML = html||'<div class="note n-warn">データなし</div>';
   } catch(e) {
-    document.getElementById('staff-list').innerHTML = `<div class="note n-ng">エラー: ${e.message}</div>`;
+    document.getElementById('staff-list').innerHTML = '<div class="note n-ng">エラー: '+e.message+'</div>';
   }
 }
 
-// =====================================================
-// ALARM タブ
-// =====================================================
 async function loadAlarms() {
-  document.getElementById('alarm-list').innerHTML = '<div class="loading">読み込み中...</div>';
-  document.getElementById('alarm-resolved-list').innerHTML = '<div class="loading">読み込み中...</div>';
+  document.getElementById('alarm-list').innerHTML='<div class="loading">読み込み中...</div>';
+  document.getElementById('alarm-resolved-list').innerHTML='<div class="loading">読み込み中...</div>';
   try {
-    const { data: alerts } = await sb.from('alerts').select('*').order('created_at', { ascending: false }).limit(50);
-    const unresolved = (alerts||[]).filter(a => !a.is_resolved);
-    const resolved = (alerts||[]).filter(a => a.is_resolved).slice(0, 10);
-
-    const storeMap = {};
-    allStores.forEach(s => { storeMap[s.id] = s.name; });
-
-    const renderAlarm = (a, isResolved) => {
-      const time = new Date(a.created_at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-      const sev = a.severity === 'critical' ? '🚨' : '⚠️';
-      return `
-        <div class="alarm-item ${isResolved ? 'alarm-resolved' : ''}">
-          <div class="alarm-ico">${sev}</div>
-          <div class="alarm-body">
-            <div class="alarm-store" style="${isResolved?'color:var(--ok)':''}">${storeMap[a.store_id]||'不明店舗'} ${isResolved?'✓ 解決済み':''}</div>
-            <div class="alarm-msg">${a.message||a.alert_type||'アラーム'}</div>
-            <div class="alarm-time">${time}</div>
-            ${!isResolved ? `
-              <div class="alarm-actions">
-                <button class="btn-sm btn-alarm" onclick="sendAlarmNotice('${a.id}','${storeMap[a.store_id]||''}','${(a.message||'').replace(/'/g,"\\'")}')">📢 通知送信</button>
-                <button class="btn-sm btn-resolve" onclick="resolveAlert('${a.id}',this)">✓ 解決済みにする</button>
-              </div>` : ''}
-          </div>
-        </div>`;
+    var res = await sb.from('alerts').select('*').order('created_at',{ascending:false}).limit(50);
+    var alerts = res.data || [];
+    var unresolved = alerts.filter(function(a){return !a.is_resolved;});
+    var resolved = alerts.filter(function(a){return a.is_resolved;}).slice(0,10);
+    var storeMap = {};
+    allStores.forEach(function(s){storeMap[s.id]=s.name;});
+    var renderAlarm = function(a, isResolved) {
+      var time = new Date(a.created_at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      var sev = a.severity==='critical'?'🚨':'⚠️';
+      return '<div class="alarm-item'+(isResolved?' alarm-resolved':'')+'">'+
+        '<div class="alarm-ico">'+sev+'</div>'+
+        '<div class="alarm-body">'+
+          '<div class="alarm-store" style="'+(isResolved?'color:var(--ok)':'')+'">'+
+            (storeMap[a.store_id]||'不明店舗')+(isResolved?' ✓ 解決済み':'')+
+          '</div>'+
+          '<div class="alarm-msg">'+(a.message||a.alert_type||'アラーム')+'</div>'+
+          '<div class="alarm-time">'+time+'</div>'+
+          (!isResolved?
+            '<div class="alarm-actions">'+
+              '<button class="btn-sm btn-alarm" onclick="sendAlarmNotice(\''+a.id+'\',\''+escape(storeMap[a.store_id]||'')+'\',\''+escape(a.message||'').replace(/\'/g,"\\'")+'\')">📢 通知送信</button>'+
+              '<button class="btn-sm btn-resolve" onclick="resolveAlert(\''+a.id+'\',this)">✓ 解決済み</button>'+
+            '</div>':'')+
+        '</div></div>';
     };
-
-    document.getElementById('alarm-list').innerHTML = unresolved.length > 0
-      ? unresolved.map(a => renderAlarm(a, false)).join('')
-      : '<div class="note n-ok">✓ 未解決のアラームはありません</div>';
-
-    document.getElementById('alarm-resolved-list').innerHTML = resolved.length > 0
-      ? resolved.map(a => renderAlarm(a, true)).join('')
-      : '<div style="font-size:12px;color:var(--text3);padding:8px 0">解決済みアラームなし</div>';
+    document.getElementById('alarm-list').innerHTML = unresolved.length>0?unresolved.map(function(a){return renderAlarm(a,false);}).join(''):'<div class="note n-ok">✓ 未解決のアラームはありません</div>';
+    document.getElementById('alarm-resolved-list').innerHTML = resolved.length>0?resolved.map(function(a){return renderAlarm(a,true);}).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">解決済みアラームなし</div>';
   } catch(e) {
-    document.getElementById('alarm-list').innerHTML = `<div class="note n-ng">エラー: ${e.message}</div>`;
+    document.getElementById('alarm-list').innerHTML='<div class="note n-ng">エラー: '+e.message+'</div>';
   }
 }
 
 async function resolveAlert(id, btn) {
   try {
-    await sb.from('alerts').update({ is_resolved: true }).eq('id', id);
+    await sb.from('alerts').update({is_resolved:true}).eq('id',id);
     showToast('✓ アラームを解決済みにしました');
-    await loadAlarms();
-    await loadToday();
-  } catch(e) { showToast('エラー: ' + e.message); }
+    loadAlarms(); loadToday();
+  } catch(e) { showToast('エラー: '+e.message); }
 }
 
 function sendAlarmNotice(id, storeName, message) {
-  // アプリ内通知（将来LINE連携に切り替え）
-  showToast(`📢 ${storeName} に通知を送信しました`);
-  // ダッシュボード上でアラームを目立たせる
-  alert(`【${storeName}】へのアラーム通知\n\n${message}\n\n※現在はアプリ内通知のみ。LINE連携後は自動送信されます。`);
+  alert('【'+unescape(storeName)+'】へのアラーム通知\n\n'+unescape(message)+'\n\n※現在はアプリ内通知のみ。LINE連携後は自動送信されます。');
+  showToast('📢 '+unescape(storeName)+' に通知しました');
 }
 
-// =====================================================
-// WEEKLY タブ
-// =====================================================
 async function loadWeekly() {
-  // 今週の月曜〜今日まで
-  const today = new Date();
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
-
-  const days = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    days.push(d);
-  }
-  const dayLabels = ['月','火','水','木','金','土','日'];
-  const totalStores = allStores.length;
-
+  var today = new Date();
+  var monday = new Date(today);
+  monday.setDate(today.getDate()-(today.getDay()===0?6:today.getDay()-1));
+  var days = [];
+  for (var i=0;i<7;i++) { var d=new Date(monday); d.setDate(monday.getDate()+i); days.push(d); }
+  var dayLabels = ['月','火','水','木','金','土','日'];
+  var totalStores = allStores.length;
   try {
-    // 各日の提出数を取得
-    const dateRange = { from: fmtDate(monday), to: fmtDate(days[6]) };
-    const [{ data: pr }, { data: per }, { data: sr }] = await Promise.all([
-      sb.from('photo_reports').select('report_date,store_id').gte('report_date', dateRange.from).lte('report_date', dateRange.to),
-      sb.from('personal_hygiene').select('report_date,store_id').gte('report_date', dateRange.from).lte('report_date', dateRange.to),
-      sb.from('store_reports').select('report_date,store_id').gte('report_date', dateRange.from).lte('report_date', dateRange.to),
+    var dateFrom = fmtDate(monday), dateTo = fmtDate(days[6]);
+    var results = await Promise.all([
+      sb.from('photo_reports').select('report_date,store_id').gte('report_date',dateFrom).lte('report_date',dateTo),
+      sb.from('personal_hygiene').select('report_date,store_id').gte('report_date',dateFrom).lte('report_date',dateTo),
+      sb.from('store_reports').select('report_date,store_id').gte('report_date',dateFrom).lte('report_date',dateTo)
     ]);
-
-    const calcPct = (data, date) => {
-      if (!data) return 0;
-      const ds = fmtDate(date);
-      const unique = new Set(data.filter(r => r.report_date === ds).map(r => r.store_id));
-      return totalStores > 0 ? Math.round(unique.size / totalStores * 100) : 0;
+    var pr=results[0].data||[], per=results[1].data||[], sr=results[2].data||[];
+    var calcPct = function(data, date) {
+      var ds = fmtDate(date);
+      var unique = new Set(data.filter(function(r){return r.report_date===ds;}).map(function(r){return r.store_id;}));
+      return totalStores>0?Math.round(unique.size/totalStores*100):0;
     };
-
-    renderWeekChart('wc-photo', days, dayLabels, d => calcPct(pr, d), '#5B4FCF');
-    renderWeekChart('wc-personal', days, dayLabels, d => calcPct(per, d), '#0A7A6A');
-    renderWeekChart('wc-store', days, dayLabels, d => calcPct(sr, d), '#C07A08');
-
-    // 店舗別週次
-    const storeRows = allStores.map(store => {
-      const photoDays = days.filter(d => (pr||[]).some(r => r.store_id === store.id && r.report_date === fmtDate(d))).length;
-      const perDays = days.filter(d => (per||[]).some(r => r.store_id === store.id && r.report_date === fmtDate(d))).length;
-      const srDays = days.filter(d => (sr||[]).some(r => r.store_id === store.id && r.report_date === fmtDate(d))).length;
-      const total = days.filter(d => d <= today).length;
-      const pct = total > 0 ? Math.round((photoDays + perDays + srDays) / (total * 3) * 100) : 0;
-      return `
-        <div class="store-card ${pct >= 80 ? 'sc-ok' : pct >= 50 ? 'sc-warn' : 'sc-ng'}" style="margin-bottom:8px">
-          <div style="padding:11px 14px;display:flex;align-items:center;gap:12px">
-            <div style="flex:1">
-              <div style="font-size:13px;font-weight:700">${store.name}</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px">📸 ${photoDays}日 / 👤 ${perDays}日 / 🏪 ${srDays}日</div>
-            </div>
-            <div style="font-size:22px;font-weight:700;font-family:'DM Sans',sans-serif;color:${pct>=80?'var(--ok)':pct>=50?'var(--warn)':'var(--ng)'}">${pct}%</div>
-          </div>
-        </div>`;
+    renderWeekChart('wc-photo', days, dayLabels, function(d){return calcPct(pr,d);}, '#5B4FCF');
+    renderWeekChart('wc-personal', days, dayLabels, function(d){return calcPct(per,d);}, '#0A7A6A');
+    renderWeekChart('wc-store', days, dayLabels, function(d){return calcPct(sr,d);}, '#C07A08');
+    var storeRows = allStores.map(function(store) {
+      var photoDays = days.filter(function(d){return pr.some(function(r){return r.store_id===store.id&&r.report_date===fmtDate(d);});}).length;
+      var perDays = days.filter(function(d){return per.some(function(r){return r.store_id===store.id&&r.report_date===fmtDate(d);});}).length;
+      var srDays = days.filter(function(d){return sr.some(function(r){return r.store_id===store.id&&r.report_date===fmtDate(d);});}).length;
+      var total = days.filter(function(d){return d<=today;}).length;
+      var pct = total>0?Math.round((photoDays+perDays+srDays)/(total*3)*100):0;
+      return '<div class="store-card '+(pct>=80?'sc-ok':pct>=50?'sc-warn':'sc-ng')+'" style="margin-bottom:8px">'+
+        '<div style="padding:11px 14px;display:flex;align-items:center;gap:12px">'+
+          '<div style="flex:1"><div style="font-size:13px;font-weight:700">'+store.name+'</div>'+
+          '<div style="font-size:11px;color:var(--text3);margin-top:2px">📸 '+photoDays+'日 / 👤 '+perDays+'日 / 🏪 '+srDays+'日</div></div>'+
+          '<div style="font-size:22px;font-weight:700;font-family:\'DM Sans\',sans-serif;color:'+(pct>=80?'var(--ok)':pct>=50?'var(--warn)':'var(--ng)')+'">'+pct+'%</div>'+
+        '</div></div>';
     });
     document.getElementById('week-store-list').innerHTML = storeRows.join('');
-  } catch(e) {
-    showToast('週次データ取得エラー: ' + e.message);
-  }
+  } catch(e) { showToast('週次エラー: '+e.message); }
 }
 
 function renderWeekChart(containerId, days, labels, pctFn, color) {
-  const today = new Date();
-  const bars = days.map((d, i) => {
-    const pct = d <= today ? pctFn(d) : null;
-    const isFuture = d > today;
-    const barColor = isFuture ? 'var(--border)' : pct >= 80 ? color : pct >= 50 ? '#C07A08' : '#C8252A';
-    const height = isFuture ? 4 : Math.max(pct, 2);
-    return `
-      <div class="wc-bar-col">
-        <div class="wc-pct" style="color:${isFuture?'var(--text3)':barColor}">${isFuture ? '' : pct + '%'}</div>
-        <div class="wc-bar" style="height:${height}px;background:${barColor};width:100%"></div>
-        <div class="wc-day">${labels[i]}</div>
-      </div>`;
+  var today = new Date();
+  var bars = days.map(function(d,i) {
+    var pct = d<=today?pctFn(d):null;
+    var isFuture = d>today;
+    var barColor = isFuture?'var(--border)':pct>=80?color:pct>=50?'#C07A08':'#C8252A';
+    var height = isFuture?4:Math.max(pct,2);
+    return '<div class="wc-bar-col">'+
+      '<div class="wc-pct" style="color:'+(isFuture?'var(--text3)':barColor)+'">'+(isFuture?'':pct+'%')+'</div>'+
+      '<div class="wc-bar" style="height:'+height+'px;background:'+barColor+';width:100%"></div>'+
+      '<div class="wc-day">'+labels[i]+'</div></div>';
   }).join('');
-  document.getElementById(containerId).innerHTML = `
-    <div class="wc-bar-wrap">${bars}</div>
-    <div class="wc-legend">
-      <span><span class="wc-dot" style="background:${color}"></span>80%以上</span>
-      <span><span class="wc-dot" style="background:#C07A08"></span>50〜79%</span>
-      <span><span class="wc-dot" style="background:#C8252A"></span>50%未満</span>
-    </div>`;
+  document.getElementById(containerId).innerHTML =
+    '<div class="wc-bar-wrap">'+bars+'</div>'+
+    '<div class="wc-legend">'+
+      '<span><span class="wc-dot" style="background:'+color+'"></span>80%以上</span>'+
+      '<span><span class="wc-dot" style="background:#C07A08"></span>50〜79%</span>'+
+      '<span><span class="wc-dot" style="background:#C8252A"></span>50%未満</span>'+
+    '</div>';
 }
 
-// =====================================================
-// HISTORY タブ
-// =====================================================
 async function loadHistory() {
-  const date = document.getElementById('hist-date').value;
-  const storeId = document.getElementById('hist-store').value;
+  var date = document.getElementById('hist-date').value;
+  var storeId = document.getElementById('hist-store').value;
   if (!date) { showToast('日付を選択してください'); return; }
-
-  document.getElementById('history-list').innerHTML = '<div class="loading">読み込み中...</div>';
+  document.getElementById('history-list').innerHTML='<div class="loading">読み込み中...</div>';
   try {
-    let prQuery = sb.from('photo_reports').select('*').eq('report_date', date).order('submitted_at');
-    let perQuery = sb.from('personal_hygiene').select('*').eq('report_date', date).order('submitted_at');
-    let srQuery = sb.from('store_reports').select('*').eq('report_date', date).order('submitted_at');
-    if (storeId) {
-      prQuery = prQuery.eq('store_id', storeId);
-      perQuery = perQuery.eq('store_id', storeId);
-      srQuery = srQuery.eq('store_id', storeId);
-    }
-
-    const [{ data: pr }, { data: per }, { data: sr }] = await Promise.all([prQuery, perQuery, srQuery]);
-    const storeMap = {};
-    allStores.forEach(s => { storeMap[s.id] = s.name; });
-
-    const typeLabel = { open:'オープン写真', close:'クローズ写真', lowtemp_temp:'低温調理温度', lowtemp_cool:'低温調理冷却',
-      temp_check:'温度チェック', delivery:'納品チェック', toilet_open:'トイレ開店', toilet_mid:'トイレ中間', toilet_close:'トイレ閉店', food_temp:'食品温度' };
-
-    let html = '';
-    // 写真報告
-    if (pr && pr.length > 0) {
-      html += `<div class="sec-lbl">📸 写真報告（${pr.length}件）</div>`;
-      pr.forEach(r => {
-        const time = new Date(r.submitted_at).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-        const photos = Array.isArray(r.photos) ? r.photos : [];
-        const taken = photos.filter(p => p.taken || p.url).length;
-        html += `
-          <div class="store-card sc-ok" style="margin-bottom:8px">
-            <div style="padding:11px 14px">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <div style="font-size:13px;font-weight:700">${storeMap[r.store_id]||'不明'} · ${typeLabel[r.report_type]||r.report_type}</div>
-                <span class="badge b-ok">${time}</span>
-              </div>
-              <div style="font-size:11px;color:var(--text3);margin-top:3px">撮影済み: ${taken}枚 / ${photos.length}枚 · 担当: ${r.manager_sign||'—'}</div>
-            </div>
-          </div>`;
+    var queries = [
+      sb.from('photo_reports').select('*').eq('report_date',date).order('submitted_at'),
+      sb.from('personal_hygiene').select('*').eq('report_date',date).order('submitted_at'),
+      sb.from('store_reports').select('*').eq('report_date',date).order('submitted_at')
+    ];
+    if (storeId) queries = queries.map(function(q){return q.eq('store_id',storeId);});
+    var results = await Promise.all(queries);
+    var pr=results[0].data||[], per=results[1].data||[], sr=results[2].data||[];
+    var storeMap = {};
+    allStores.forEach(function(s){storeMap[s.id]=s.name;});
+    var typeLabel = {open:'オープン写真',close:'クローズ写真',lowtemp_temp:'低温調理温度',lowtemp_cool:'低温調理冷却',
+      temp_check:'温度チェック',delivery:'納品チェック',toilet_open:'トイレ開店',toilet_mid:'トイレ中間',toilet_close:'トイレ閉店',food_temp:'食品温度'};
+    var html = '';
+    if (pr.length>0) {
+      html += '<div class="sec-lbl">📸 写真報告（'+pr.length+'件）</div>';
+      pr.forEach(function(r){
+        var time=new Date(r.submitted_at).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+        var photos=Array.isArray(r.photos)?r.photos:[];
+        var taken=photos.filter(function(p){return p.taken||p.url;}).length;
+        html+='<div class="store-card sc-ok" style="margin-bottom:8px"><div style="padding:11px 14px">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center">'+
+            '<div style="font-size:13px;font-weight:700">'+(storeMap[r.store_id]||'不明')+' · '+(typeLabel[r.report_type]||r.report_type)+'</div>'+
+            '<span class="badge b-ok">'+time+'</span></div>'+
+          '<div style="font-size:11px;color:var(--text3);margin-top:3px">撮影済: '+taken+'/'+photos.length+'枚 · 担当: '+(r.manager_sign||'—')+'</div>'+
+        '</div></div>';
       });
     }
-    // 個人衛生
-    if (per && per.length > 0) {
-      html += `<div class="sec-lbl">👤 個人衛生（${per.length}件）</div>`;
-      per.forEach(r => {
-        const time = new Date(r.submitted_at).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-        const bt = r.health?.body_temp;
-        html += `
-          <div class="store-card ${r.status==='ok'?'sc-ok':'sc-ng'}" style="margin-bottom:8px">
-            <div style="padding:11px 14px">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <div style="font-size:13px;font-weight:700">${storeMap[r.store_id]||'不明'} · ${r.staff_name||'—'}</div>
-                <span class="badge ${r.status==='ok'?'b-ok':'b-red'}">${time}</span>
-              </div>
-              <div style="font-size:11px;color:var(--text3);margin-top:3px">体温: ${bt||'—'}℃ · ステータス: ${r.status==='ok'?'正常':'要確認'}</div>
-            </div>
-          </div>`;
+    if (per.length>0) {
+      html += '<div class="sec-lbl">👤 個人衛生（'+per.length+'件）</div>';
+      per.forEach(function(r){
+        var time=new Date(r.submitted_at).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+        var bt=r.health&&r.health.body_temp;
+        html+='<div class="store-card '+(r.status==='ok'?'sc-ok':'sc-ng')+'" style="margin-bottom:8px"><div style="padding:11px 14px">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center">'+
+            '<div style="font-size:13px;font-weight:700">'+(storeMap[r.store_id]||'不明')+' · '+(r.staff_name||'—')+'</div>'+
+            '<span class="badge '+(r.status==='ok'?'b-ok':'b-red')+'">'+time+'</span></div>'+
+          '<div style="font-size:11px;color:var(--text3);margin-top:3px">体温: '+(bt||'—')+'℃ · '+(r.status==='ok'?'正常':'要確認')+'</div>'+
+        '</div></div>';
       });
     }
-    // 店舗全体
-    if (sr && sr.length > 0) {
-      html += `<div class="sec-lbl">🏪 店舗全体（${sr.length}件）</div>`;
-      sr.forEach(r => {
-        const time = new Date(r.submitted_at).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-        html += `
-          <div class="store-card sc-ok" style="margin-bottom:8px">
-            <div style="padding:11px 14px">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <div style="font-size:13px;font-weight:700">${storeMap[r.store_id]||'不明'} · ${typeLabel[r.report_type]||r.report_type}</div>
-                <span class="badge b-ok">${time}</span>
-              </div>
-              <div style="font-size:11px;color:var(--text3);margin-top:3px">担当: ${r.staff_name||'—'}</div>
-            </div>
-          </div>`;
+    if (sr.length>0) {
+      html += '<div class="sec-lbl">🏪 店舗全体（'+sr.length+'件）</div>';
+      sr.forEach(function(r){
+        var time=new Date(r.submitted_at).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+        html+='<div class="store-card sc-ok" style="margin-bottom:8px"><div style="padding:11px 14px">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center">'+
+            '<div style="font-size:13px;font-weight:700">'+(storeMap[r.store_id]||'不明')+' · '+(typeLabel[r.report_type]||r.report_type)+'</div>'+
+            '<span class="badge b-ok">'+time+'</span></div>'+
+          '<div style="font-size:11px;color:var(--text3);margin-top:3px">担当: '+(r.staff_name||'—')+'</div>'+
+        '</div></div>';
       });
     }
-
     if (!html) html = '<div class="note n-warn">⚠️ この日のデータがありません</div>';
     document.getElementById('history-list').innerHTML = html;
   } catch(e) {
-    document.getElementById('history-list').innerHTML = `<div class="note n-ng">エラー: ${e.message}</div>`;
+    document.getElementById('history-list').innerHTML='<div class="note n-ng">エラー: '+e.message+'</div>';
   }
 }
 
-// =====================================================
-// UTILS
-// =====================================================
-function showToast(msg, dur=3000) {
-  const t = document.getElementById('toast');
+function showToast(msg, dur) {
+  dur = dur||3000;
+  var t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur);
+  setTimeout(function(){t.classList.remove('show');}, dur);
 }
 </script>
 </body>

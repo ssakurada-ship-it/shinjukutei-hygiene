@@ -905,7 +905,7 @@ async function loadStores(){
           '</div>' +
           '<span class="badge ' + (s.is_active ? 'b-ok' : 'b-gray') + '" style="margin-right:8px">' + (s.is_active ? '稼働中' : '停止中') + '</span>' +
           '<button class="btn-sm ' + (s.is_active ? 'btn-alarm' : 'btn-resolve') + '" ' +
-            'onclick="toggleStore(this,'' + s.id + '',' + s.is_active + ')">' +
+            'onclick="toggleStore(this,\'' + s.id + '\',' + s.is_active + ')">' +
             (s.is_active ? '停止' : '有効化') +
           '</button>' +
         '</div></div>';

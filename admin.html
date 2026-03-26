@@ -206,6 +206,7 @@ input[type="date"]:focus{border-color:var(--brand);}
       <div class="nav-item" id="sn-alarm" onclick="switchTab('alarm')"><span class="nav-icon">🔔</span>アラーム管理</div>
       <div class="nav-item" id="sn-week" onclick="switchTab('week')"><span class="nav-icon">📊</span>週次レポート</div>
       <div class="nav-item" id="sn-history" onclick="switchTab('history')"><span class="nav-icon">🗂️</span>過去データ</div>
+      <div class="nav-item" id="sn-stores" onclick="switchTab('stores')"><span class="nav-icon">🏪</span>店舗管理</div>
     </div>
     <div class="sidebar-footer">
       <div class="sidebar-date" id="sidebar-date"></div>
@@ -234,6 +235,7 @@ input[type="date"]:focus{border-color:var(--brand);}
       <div class="mobile-dash-tab" onclick="switchTab('alarm')">アラーム</div>
       <div class="mobile-dash-tab" onclick="switchTab('week')">週次</div>
       <div class="mobile-dash-tab" onclick="switchTab('history')">過去</div>
+      <div class="mobile-dash-tab" onclick="switchTab('stores')">店舗</div>
     </div>
 
     <div class="main-body">
@@ -315,9 +317,44 @@ input[type="date"]:focus{border-color:var(--brand);}
         <div id="history-list"><div class="loading">日付を選択して「表示」を押してください</div></div>
       </div>
 
+
+      <!-- STORES -->
+      <div class="tab-panel" id="tp-stores">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:15px;font-weight:700">店舗管理</div>
+          <button class="btn-sm btn-info" style="width:auto" onclick="showAddStoreForm()">＋ 新店舗追加</button>
+        </div>
+        <div id="add-store-form" style="display:none;margin-bottom:12px">
+          <div class="card">
+            <div style="padding:14px">
+              <div style="margin-bottom:10px">
+                <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">店舗名（日本語）</div>
+                <input id="ns-name" type="text" placeholder="例：京都祇園店" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:'Noto Sans JP',sans-serif;outline:none;color:var(--text);background:var(--card)">
+              </div>
+              <div style="margin-bottom:10px">
+                <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">英語名</div>
+                <input id="ns-name-en" type="text" placeholder="例：Kyoto Gion" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;color:var(--text);background:var(--card)">
+              </div>
+              <div style="margin-bottom:14px">
+                <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">エリア</div>
+                <select id="ns-area" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;background:var(--card);font-family:'Noto Sans JP',sans-serif;outline:none;color:var(--text)">
+                  <option>東京</option><option>大阪</option><option>北海道</option><option>京都</option><option>名古屋</option><option>福岡</option><option>その他</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-main" style="flex:1" onclick="addStore()">追加する</button>
+                <button class="btn btn-sub" style="flex:1" onclick="document.getElementById('add-store-form').style.display='none'">キャンセル</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="sec-lbl">登録店舗一覧</div>
+        <div id="stores-list"><div class="loading">読み込み中...</div></div>
+      </div>
     </div><!-- main-body -->
   </div><!-- main-content -->
 </div><!-- s-dash -->
+
 
 <script>
 var SUPABASE_URL = 'https://mygnpsmvyxdktrnyacsl.supabase.co';
@@ -329,7 +366,7 @@ var allStores = [];
 var currentTab = 'today';
 var lbImages = [];
 var lbIndex = 0;
-var tabTitles = {today:'今日の状況',staff:'出勤確認',photos:'写真確認',alarm:'アラーム管理',week:'週次レポート',history:'過去データ'};
+var tabTitles = {today:'今日の状況',staff:'出勤確認',photos:'写真確認',alarm:'アラーム管理',week:'週次レポート',history:'過去データ',stores:'店舗管理'};
 
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('hist-date').value = fmtDate(new Date());
@@ -401,6 +438,7 @@ function switchTab(tab) {
   else if (tab==='photos') loadPhotos();
   else if (tab==='alarm') loadAlarms();
   else if (tab==='week') loadWeekly();
+  else if (tab==='stores') loadStores();
 }
 
 function toggleSidebar() {
@@ -841,6 +879,74 @@ function showToast(msg,dur){
   var t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   setTimeout(function(){t.classList.remove('show');},dur);
+}
+
+/* ===== STORE MANAGEMENT ===== */
+function showAddStoreForm(){
+  var f = document.getElementById('add-store-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function loadStores(){
+  document.getElementById('stores-list').innerHTML = '<div class="loading">読み込み中...</div>';
+  try {
+    var res = await sb.from('stores').select('*').order('area').order('name');
+    var stores = res.data || [];
+    if (stores.length === 0) {
+      document.getElementById('stores-list').innerHTML = '<div class="note n-warn">店舗がありません</div>';
+      return;
+    }
+    var html = stores.map(function(s) {
+      return '<div class="store-card ' + (s.is_active ? 'sc-ok' : 'sc-none') + '" style="margin-bottom:8px">' +
+        '<div style="padding:12px 14px;display:flex;align-items:center;gap:12px">' +
+          '<div style="flex:1">' +
+            '<div style="font-size:14px;font-weight:700">' + s.name + '</div>' +
+            '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + s.area + ' · ' + (s.name_en || '—') + '</div>' +
+          '</div>' +
+          '<span class="badge ' + (s.is_active ? 'b-ok' : 'b-gray') + '" style="margin-right:8px">' + (s.is_active ? '稼働中' : '停止中') + '</span>' +
+          '<button class="btn-sm ' + (s.is_active ? 'btn-alarm' : 'btn-resolve') + '" ' +
+            'onclick="toggleStore(this,'' + s.id + '',' + s.is_active + ')">' +
+            (s.is_active ? '停止' : '有効化') +
+          '</button>' +
+        '</div></div>';
+    }).join('');
+    document.getElementById('stores-list').innerHTML = html;
+  } catch(e) {
+    document.getElementById('stores-list').innerHTML = '<div class="note n-ng">エラー: ' + e.message + '</div>';
+  }
+}
+
+async function addStore(){
+  var name = document.getElementById('ns-name').value.trim();
+  var nameEn = document.getElementById('ns-name-en').value.trim();
+  var area = document.getElementById('ns-area').value;
+  if (!name) { showToast('店舗名を入力してください'); return; }
+  try {
+    var res = await sb.from('stores').insert({name:name, name_en:nameEn, area:area, is_active:true}).select().single();
+    if (res.error) throw res.error;
+    allStores.push(res.data);
+    ['hist-store','photo-store-filter'].forEach(function(id){
+      var sel = document.getElementById(id);
+      if (!sel) return;
+      var opt = document.createElement('option');
+      opt.value = res.data.id;
+      opt.textContent = res.data.name;
+      sel.appendChild(opt);
+    });
+    document.getElementById('ns-name').value = '';
+    document.getElementById('ns-name-en').value = '';
+    document.getElementById('add-store-form').style.display = 'none';
+    showToast('✓ ' + name + ' を追加しました');
+    loadStores();
+  } catch(e) { showToast('エラー: ' + e.message); }
+}
+
+async function toggleStore(btn, id, isActive){
+  try {
+    await sb.from('stores').update({is_active: !isActive}).eq('id', id);
+    showToast(isActive ? '店舗を停止しました' : '店舗を有効化しました');
+    loadStores();
+  } catch(e) { showToast('エラー: ' + e.message); }
 }
 </script>
 </body>

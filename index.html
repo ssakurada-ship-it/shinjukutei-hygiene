@@ -658,8 +658,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 // =====================================================
 // SUPABASE 設定（ここを編集してください）
 // =====================================================
-const SUPABASE_URL = 'https://mygnpsmvyxdktrnyacsl.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_IndIwDpVX18CshTHpvNnAQ_6GthPauR';
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // =====================================================
@@ -850,7 +850,8 @@ async function submitPhotoReport(reportType, gridId, signId, progressKey) {
       photos: photos,
       manager_sign: sign,
       status: 'submitted',
-      ai_summary: null
+      ai_summary: null,
+      report_date: new Date().toISOString().split('T')[0]
     });
     if (error) throw error;
 
@@ -885,9 +886,9 @@ async function submitLowtempReport() {
     const sign = document.getElementById('lowtemp-sign')?.value || '';
 
     // temp report
-    await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_temp', photos: photos.slice(0,3), temp_values: temps, manager_sign: sign, status: 'submitted' });
+    await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_temp', photos: photos.slice(0,3), temp_values: temps, manager_sign: sign, status: 'submitted', report_date: new Date().toISOString().split('T')[0] });
     // cool report
-    await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_cool', photos: photos.slice(3), temp_values: { cool_temp: temps.cool_temp }, status: 'submitted' });
+    await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_cool', photos: photos.slice(3), temp_values: { cool_temp: temps.cool_temp }, status: 'submitted', report_date: new Date().toISOString().split('T')[0] });
 
     todayProgress.photo = Math.min(todayProgress.photo + 1, 3);
     const items = [];

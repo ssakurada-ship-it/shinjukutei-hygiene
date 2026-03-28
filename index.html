@@ -823,9 +823,15 @@ async function handlePhotoSelected(e) {
   } catch(err) {
     slot.classList.remove('uploading');
     st.className = 'ps-status pss-ng'; st.textContent = '!';
-    const detail = err.message || err.error || err.statusCode || JSON.stringify(err);
-    alert('アップロードエラー詳細:\n' + detail + '\n\npath: ' + (err.path||'—') + '\nstatus: ' + (err.status||'—'));
-    showToast('アップロードエラー: ' + detail, 6000);
+    const detail = JSON.stringify(err, Object.getOwnPropertyNames(err));
+    let errBox = document.getElementById('upload-err-box');
+    if (!errBox) {
+      errBox = document.createElement('div');
+      errBox.id = 'upload-err-box';
+      errBox.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1C1C1C;color:#fff;font-size:11px;padding:10px;z-index:999;max-height:40vh;overflow-y:auto;word-break:break-all;white-space:pre-wrap;';
+      document.body.appendChild(errBox);
+    }
+    errBox.textContent = 'UPLOAD ERROR:\n' + detail;
   }
 }
 

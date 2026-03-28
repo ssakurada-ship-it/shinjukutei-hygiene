@@ -823,7 +823,9 @@ async function handlePhotoSelected(e) {
   } catch(err) {
     slot.classList.remove('uploading');
     st.className = 'ps-status pss-ng'; st.textContent = '!';
-    showToast('アップロードエラー: ' + err.message, 4000);
+    const detail = err.message || err.error || err.statusCode || JSON.stringify(err);
+    alert('アップロードエラー詳細:\n' + detail + '\n\npath: ' + (err.path||'—') + '\nstatus: ' + (err.status||'—'));
+    showToast('アップロードエラー: ' + detail, 6000);
   }
 }
 
@@ -850,8 +852,7 @@ async function submitPhotoReport(reportType, gridId, signId, progressKey) {
       photos: photos,
       manager_sign: sign,
       status: 'submitted',
-      ai_summary: null,
-      report_date: new Date().toISOString().split('T')[0]
+      ai_summary: null
     });
     if (error) throw error;
 
@@ -886,9 +887,9 @@ async function submitLowtempReport() {
     const sign = document.getElementById('lowtemp-sign')?.value || '';
 
     // temp report
-    await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_temp', photos: photos.slice(0,3), temp_values: temps, manager_sign: sign, status: 'submitted', report_date: new Date().toISOString().split('T')[0] });
+    await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_temp', photos: photos.slice(0,3), temp_values: temps, manager_sign: sign, status: 'submitted' });
     // cool report
-    await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_cool', photos: photos.slice(3), temp_values: { cool_temp: temps.cool_temp }, status: 'submitted', report_date: new Date().toISOString().split('T')[0] });
+    await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_cool', photos: photos.slice(3), temp_values: { cool_temp: temps.cool_temp }, status: 'submitted' });
 
     todayProgress.photo = Math.min(todayProgress.photo + 1, 3);
     const items = [];

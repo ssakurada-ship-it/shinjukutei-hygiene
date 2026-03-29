@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storage Upload Debug</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, sans-serif; padding: 16px; background: #111; color: #eee; }
+h2 { font-size: 18px; margin-bottom: 12px; }
+.section { background: #1a1a1a; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.section h3 { font-size: 14px; color: #0f0; margin-bottom: 8px; }
+button { display: block; width: 100%; padding: 14px; margin: 6px 0; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+.btn-a { background: #2563eb; color: #fff; }
+.btn-b { background: #059669; color: #fff; }
+.btn-c { background: #d97706; color: #fff; }
+#log { background: #000; color: #0f0; font-family: monospace; font-size: 11px; padding: 10px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; max-height: 60vh; overflow-y: auto; margin-top: 12px; min-height: 100px; }
+input[type=file] { margin: 8px 0; }
+</style>
+</head>
+<body>
+<h2>Supabase Storage Debug Tool</h2>
+
+<div class="section">
+<h3>Step 1: 接続テスト（データなし）</h3>
+<button class="btn-a" onclick="testConnection()">API接続テスト</button>
+</div>
+
+<div class="section">
+<h3>Step 2: REST API直接アップロード（SDK不使用）</h3>
+<button class="btn-b" onclick="testDirectUpload()">REST APIで直接アップロード</button>
+</div>
+
+<div class="section">
+<h3>Step 3: SDK経由アップロード</h3>
+<input type="file" id="fileInput" accept="image/*" capture="environment">
+<button class="btn-c" onclick="testSDKUpload()">SDK経由でアップロード</button>
+</div>
+
+<div id="log">ログがここに表示されます...</div>
+
+<script>
+const SUPABASE_URL = 'https://mygnpsmvyxdktrnyacsl.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_IndIwDpVX18CshTHpvNnAQ_6GthPauR';
+const BUCKET = 'hygiene-photos';
+
+function log(msg) {
+  const el = document.getElementById('log');
+  const ts = new Date().toLocaleTimeString();
+  el.textContent += '\n[' + ts + '] ' + msg;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ============ TEST 1: 接続テスト ============
+async function testConnection() {
+  log('--- TEST 1: 接続テスト ---');
+  try {
+    const url = SUPABASE_URL + '/storage/v1/bucket/' + BUCKET;
+    log('GET ' + url);
+    const res = await fetch(url, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY
+      }
+    });
+    const body = await res.text();
+    log('Status: ' + res.status);
+    log('Response: ' + body);
+    if (res.ok) {
+      log('OK: バケット接続成功');
+    } else {
+      log('NG: バケット接続失敗');
+    }
+  } catch(e) {
+    log('EXCEPTION: ' + e.message);
+  }
+}
+
+// ============ TEST 2: REST API直接アップロード ============
+async function testDirectUpload() {
+  log('--- TEST 2: REST API直接アップロード ---');
+  try {
+    // 1x1 赤ピクセルのPNG（最小バイナリ）
+    const base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], { type: 'image/png' });
+
+    const path = 'debug/test_' + Date.now() + '.png';
+    const url = SUPABASE_URL + '/storage/v1/object/' + BUCKET + '/' + path;
+    log('POST ' + url);
+    log('Blob size: ' + blob.size + ' bytes');
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'image/png',
+        'x-upsert': 'true'
+      },
+      body: blob
+    });
+    const body = await res.text();
+    log('Status: ' + res.status);
+    log('Response: ' + body);
+    if (res.ok) {
+      log('OK: REST APIアップロード成功!');
+    } else {
+      log('NG: REST APIアップロード失敗');
+    }
+  } catch(e) {
+    log('EXCEPTION: ' + e.message);
+    log('Stack: ' + e.stack);
+  }
+}
+
+// ============ TEST 3: SDK経由アップロード ============
+async function testSDKUpload() {
+  log('--- TEST 3: SDK経由アップロード ---');
+  try {
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    log('Supabase client created');
+    log('SDK version check...');
+
+    const fileInput = document.getElementById('fileInput');
+    let file;
+
+    if (fileInput.files && fileInput.files[0]) {
+      file = fileInput.files[0];
+      log('User file: ' + file.name + ' (' + file.size + ' bytes, ' + file.type + ')');
+    } else {
+      // ファイル未選択時は1x1 PNGを使用
+      const base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      file = new Blob([bytes], { type: 'image/png' });
+      log('Using test 1x1 PNG (no file selected)');
+    }
+
+    const path = 'debug/sdk_test_' + Date.now() + '.png';
+    log('Upload path: ' + path);
+
+    // isValidKey を手動チェック
+    const keyRegex = /^(\w|\/|!|-|\.|\*|'|\(|\)| |&|\$|@|=|;|:|\+|,|\?)*$/;
+    log('Path valid (regex): ' + keyRegex.test(path));
+
+    const { data, error } = await sb.storage
+      .from(BUCKET)
+      .upload(path, file, {
+        contentType: file.type || 'image/png',
+        upsert: true
+      });
+
+    if (error) {
+      log('SDK ERROR: ' + JSON.stringify(error));
+      log('error.message: ' + error.message);
+      log('error.statusCode: ' + error.statusCode);
+      log('error.__isStorageError: ' + error.__isStorageError);
+    } else {
+      log('SDK SUCCESS: ' + JSON.stringify(data));
+      const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(path);
+      log('Public URL: ' + urlData.publicUrl);
+    }
+  } catch(e) {
+    log('EXCEPTION: ' + e.message);
+    log('Stack: ' + e.stack);
+  }
+}
+
+log('Debug tool loaded');
+log('URL: ' + SUPABASE_URL);
+log('Key: ' + SUPABASE_KEY.substring(0, 20) + '...');
+log('Bucket: ' + BUCKET);
+</script>
+</body>
+</html>

@@ -811,7 +811,8 @@ async function handlePhotoSelected(e) {
   try {
     const ext = file.type.includes('png') ? 'png' : 'jpg';
     const idx = Array.from(slot.parentElement.children).indexOf(slot);
-    const path = `${currentStore.id}/${type}/${Date.now()}_${idx}.${ext}`;
+    const storeKey = currentStore.id.replace(/-/g, '');
+    const path = `${storeKey}/${type}/${Date.now()}_${idx}.${ext}`;
     const { error: upErr } = await sb.storage.from('hygiene-photos').upload(path, file, { contentType: file.type, upsert: true });
     if (upErr) throw upErr;
 

@@ -1,4 +1,4 @@
-<!-- v20260329 --><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -813,7 +813,6 @@ async function handlePhotoSelected(e) {
     const idx = Array.from(slot.parentElement.children).indexOf(slot);
     const path = currentStore.id + '/' + type + '/' + Date.now() + '_' + idx + '.' + ext;
 
-    // REST API直接アップロード（SDKバリデーション回避）
     const uploadUrl = SUPABASE_URL + '/storage/v1/object/hygiene-photos/' + path;
     const res = await fetch(uploadUrl, {
       method: 'POST',
@@ -840,8 +839,7 @@ async function handlePhotoSelected(e) {
   } catch(err) {
     slot.classList.remove('uploading');
     st.className = 'ps-status pss-ng'; st.textContent = '!';
-    const detail = err.message || JSON.stringify(err);
-    showToast('エラー: ' + detail, 6000);
+    showToast('エラー: ' + (err.message || JSON.stringify(err)), 6000);
   }
 }
 

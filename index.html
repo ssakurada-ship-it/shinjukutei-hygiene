@@ -190,12 +190,12 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
     </div>
     <div class="menu-item" id="mi-open" onclick="showScreen('s-open-photo')">
       <div class="mi-ico" style="background:var(--photo-bg)">🌅</div>
-      <div><div class="mi-title">オープン写真報告</div><div class="mi-sub">7項目撮影</div></div>
+      <div><div class="mi-title">オープン写真報告</div><div class="mi-sub">6項目撮影</div></div>
       <div class="mi-right" id="mi-open-r">›</div>
     </div>
     <div class="menu-item" id="mi-close" onclick="showScreen('s-close-photo')">
       <div class="mi-ico" style="background:#F0E8FF">🌙</div>
-      <div><div class="mi-title">クローズ写真報告</div><div class="mi-sub">9項目撮影</div></div>
+      <div><div class="mi-title">クローズ写真報告</div><div class="mi-sub">11項目撮影</div></div>
       <div class="mi-right" id="mi-close-r">›</div>
     </div>
     <div class="menu-item" id="mi-lowtemp" onclick="showScreen('s-lowtemp-photo')">
@@ -260,7 +260,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 <div class="screen" id="s-open-photo">
   <div class="tb">
     <button class="tb-back" onclick="showScreen('s-home')">←</button>
-    <div class="tb-info"><div class="tb-brand" style="color:var(--photo)">オープン写真報告</div><div class="tb-sub">7項目 · 撮影して送信</div></div>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--photo)">オープン写真報告</div><div class="tb-sub">6項目 · 撮影して送信</div></div>
     <span class="badge b-photo">写真</span>
   </div>
   <div class="sa">
@@ -268,13 +268,12 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
     <div class="card">
       <div class="card-head" onclick="toggleCard(this)">
         <div class="card-ico" style="background:var(--photo-bg)">📋</div>
-        <div><div class="card-title">撮影項目（7箇所）</div></div>
+        <div><div class="card-title">撮影項目（6箇所）</div></div>
         <div class="card-chev open">▼</div>
       </div>
       <div class="card-body open">
         <div class="photo-section">
           <div class="photo-grid" id="open-photo-grid">
-            <div class="photo-slot" data-slot="制服姿" onclick="triggerCamera(this,'open')"><div class="ps-icon">👕</div><div class="ps-name">制服姿</div></div>
             <div class="photo-slot" data-slot="卓セット" onclick="triggerCamera(this,'open')"><div class="ps-icon">🍽️</div><div class="ps-name">卓セット</div></div>
             <div class="photo-slot" data-slot="ホール全体" onclick="triggerCamera(this,'open')"><div class="ps-icon">🏠</div><div class="ps-name">ホール全体</div></div>
             <div class="photo-slot" data-slot="デシャップ全体" onclick="triggerCamera(this,'open')"><div class="ps-icon">🍳</div><div class="ps-name">デシャップ</div></div>
@@ -298,7 +297,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 <div class="screen" id="s-close-photo">
   <div class="tb">
     <button class="tb-back" onclick="showScreen('s-home')">←</button>
-    <div class="tb-info"><div class="tb-brand" style="color:var(--photo)">クローズ写真報告</div><div class="tb-sub">9項目 · 閉店後に撮影</div></div>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--photo)">クローズ写真報告</div><div class="tb-sub">11項目 · 閉店後に撮影</div></div>
     <span class="badge b-photo">写真</span>
   </div>
   <div class="sa">
@@ -306,20 +305,22 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
     <div class="card">
       <div class="card-head" onclick="toggleCard(this)">
         <div class="card-ico" style="background:var(--photo-bg)">📋</div>
-        <div><div class="card-title">撮影項目（9箇所）</div></div>
+        <div><div class="card-title">撮影項目（11箇所）</div></div>
         <div class="card-chev open">▼</div>
       </div>
       <div class="card-body open">
         <div class="photo-section">
           <div class="photo-grid" id="close-photo-grid">
-            <div class="photo-slot" data-slot="全ガス栓" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">全ガス栓</div></div>
-            <div class="photo-slot" data-slot="冷蔵冷凍庫内" onclick="triggerCamera(this,'close')"><div class="ps-icon">❄️</div><div class="ps-name">冷蔵・冷凍庫内</div></div>
+            <div class="photo-slot" data-slot="ガス栓①" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">ガス栓①</div></div>
+            <div class="photo-slot" data-slot="ガス栓②" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">ガス栓②</div></div>
+            <div class="photo-slot" data-slot="ガス栓③" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">ガス栓③</div></div>
+            <div class="photo-slot" data-slot="冷蔵庫内①" onclick="triggerCamera(this,'close')"><div class="ps-icon">❄️</div><div class="ps-name">冷蔵庫①</div></div>
+            <div class="photo-slot" data-slot="冷凍庫内①" onclick="triggerCamera(this,'close')"><div class="ps-icon">🧊</div><div class="ps-name">冷凍庫①</div></div>
             <div class="photo-slot" data-slot="包丁収納" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔪</div><div class="ps-name">包丁収納</div></div>
             <div class="photo-slot" data-slot="洗浄機" onclick="triggerCamera(this,'close')"><div class="ps-icon">🫙</div><div class="ps-name">洗浄機</div></div>
             <div class="photo-slot" data-slot="ボウルザル収納" onclick="triggerCamera(this,'close')"><div class="ps-icon">🥣</div><div class="ps-name">ボウル・ザル</div></div>
             <div class="photo-slot" data-slot="まな板保管" onclick="triggerCamera(this,'close')"><div class="ps-icon">🟩</div><div class="ps-name">まな板保管</div></div>
             <div class="photo-slot" data-slot="キッチン全体" onclick="triggerCamera(this,'close')"><div class="ps-icon">🍳</div><div class="ps-name">キッチン全体</div></div>
-            <div class="photo-slot" data-slot="衛生管理報告書" onclick="triggerCamera(this,'close')"><div class="ps-icon">📄</div><div class="ps-name">衛生管理報告書</div></div>
             <div class="photo-slot" data-slot="加熱器具" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">加熱器具</div></div>
           </div>
         </div>
@@ -338,51 +339,69 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 <div class="screen" id="s-lowtemp-photo">
   <div class="tb">
     <button class="tb-back" onclick="showScreen('s-home')">←</button>
-    <div class="tb-info"><div class="tb-brand" style="color:var(--photo)">低温調理報告</div><div class="tb-sub">温度報告 + 冷却確認</div></div>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--photo)">低温調理報告</div><div class="tb-sub">本日の低温調理の有無を選択</div></div>
     <span class="badge b-warn">要提出</span>
   </div>
   <div class="sa">
     <div class="card">
-      <div class="card-head" onclick="toggleCard(this)">
+      <div class="card-head">
         <div class="card-ico" style="background:var(--warn-bg)">🌡️</div>
-        <div><div class="card-title">低温調理温度報告</div><div class="card-sub">温度計3本 · 60℃以上5時間</div></div>
-        <div class="card-chev open">▼</div>
+        <div><div class="card-title">本日の低温調理</div></div>
       </div>
-      <div class="card-body open">
-        <div class="photo-section">
-          <div class="note n-warn" style="margin-bottom:10px">⚠️ 全温度計が60℃以上 / 5時間であること</div>
-          <div class="photo-grid" id="lowtemp-photo-grid">
-            <div class="photo-slot" data-slot="温度計①" onclick="triggerCamera(this,'lowtemp_temp')"><div class="ps-icon">🌡️</div><div class="ps-name">温度計①</div></div>
-            <div class="photo-slot" data-slot="温度計②" onclick="triggerCamera(this,'lowtemp_temp')"><div class="ps-icon">🌡️</div><div class="ps-name">温度計②</div></div>
-            <div class="photo-slot" data-slot="温度計③" onclick="triggerCamera(this,'lowtemp_temp')"><div class="ps-icon">🌡️</div><div class="ps-name">温度計③</div></div>
-          </div>
+      <div class="card-body open" style="padding:14px;">
+        <div style="display:flex;gap:8px;">
+          <button id="lt-yes-btn" class="btn" style="flex:1;padding:14px;font-size:16px;font-weight:700;border:2px solid var(--brand);background:var(--brand);color:#fff;border-radius:10px;" onclick="toggleLowtemp(true)">あり</button>
+          <button id="lt-no-btn" class="btn" style="flex:1;padding:14px;font-size:16px;font-weight:700;border:2px solid var(--border);background:var(--bg);color:var(--text2);border-radius:10px;" onclick="toggleLowtemp(false)">なし</button>
         </div>
-        <div class="temp-row"><div class="temp-lbl">温度計①<br><span class="temp-lbl-sub">60℃以上</span></div><input class="tinp" id="lt1" type="number" step="0.1" oninput="evalT(this,60,null,'ge')"><div class="tunit">℃</div></div>
-        <div class="temp-row"><div class="temp-lbl">温度計②<br><span class="temp-lbl-sub">60℃以上</span></div><input class="tinp" id="lt2" type="number" step="0.1" oninput="evalT(this,60,null,'ge')"><div class="tunit">℃</div></div>
-        <div class="temp-row" style="border-bottom:none"><div class="temp-lbl">温度計③<br><span class="temp-lbl-sub">60℃以上</span></div><input class="tinp" id="lt3" type="number" step="0.1" oninput="evalT(this,60,null,'ge')"><div class="tunit">℃</div></div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-head" onclick="toggleCard(this)">
-        <div class="card-ico" style="background:var(--info-bg)">🧊</div>
-        <div><div class="card-title">低温調理冷却報告</div><div class="card-sub">氷水 · 30分以内20℃以下</div></div>
-        <div class="card-chev open">▼</div>
-      </div>
-      <div class="card-body open">
-        <div class="photo-section">
-          <div class="note n-info" style="margin-bottom:10px">ℹ️ 全ての肉が氷水にしっかり浸かっているか確認</div>
-          <div class="photo-grid" id="lowcool-photo-grid">
-            <div class="photo-slot" style="grid-column:span 2;aspect-ratio:2/1" data-slot="氷水冷却全体" onclick="triggerCamera(this,'lowtemp_cool')"><div class="ps-icon">🧊</div><div class="ps-name">氷水・全体写真</div></div>
-            <div class="photo-slot" data-slot="冷却中心温度計" onclick="triggerCamera(this,'lowtemp_cool')"><div class="ps-icon">🌡️</div><div class="ps-name">中心温度計</div></div>
-          </div>
-        </div>
-        <div class="temp-row" style="border-bottom:none"><div class="temp-lbl">冷却後中心温度<br><span class="temp-lbl-sub">30分以内に20℃以下</span></div><input class="tinp" id="cool-temp" type="number" step="0.1" oninput="evalT(this,null,20,'le')"><div class="tunit">℃</div></div>
-      </div>
+    <div id="lowtemp-none-msg" style="display:none;">
+      <div class="note n-info" style="margin-top:8px;">ℹ️ 本日は低温調理なし。そのまま送信してください。</div>
+      <div class="sign-row"><input class="sinp" id="lowtemp-none-sign" type="text" placeholder="担当者名"></div>
     </div>
-    <div class="sign-row"><input class="sinp" id="lowtemp-sign" type="text" placeholder="担当者名"></div>
+    <div id="lowtemp-form">
+      <div class="card">
+        <div class="card-head" onclick="toggleCard(this)">
+          <div class="card-ico" style="background:var(--warn-bg)">🌡️</div>
+          <div><div class="card-title">低温調理温度報告</div><div class="card-sub">温度計3本 · 60℃以上5時間</div></div>
+          <div class="card-chev open">▼</div>
+        </div>
+        <div class="card-body open">
+          <div class="photo-section">
+            <div class="note n-warn" style="margin-bottom:10px">⚠️ 全温度計が60℃以上 / 5時間であること</div>
+            <div class="photo-grid" id="lowtemp-photo-grid">
+              <div class="photo-slot" data-slot="温度計①" onclick="triggerCamera(this,'lowtemp_temp')"><div class="ps-icon">🌡️</div><div class="ps-name">温度計①</div></div>
+              <div class="photo-slot" data-slot="温度計②" onclick="triggerCamera(this,'lowtemp_temp')"><div class="ps-icon">🌡️</div><div class="ps-name">温度計②</div></div>
+              <div class="photo-slot" data-slot="温度計③" onclick="triggerCamera(this,'lowtemp_temp')"><div class="ps-icon">🌡️</div><div class="ps-name">温度計③</div></div>
+            </div>
+          </div>
+          <div class="temp-row"><div class="temp-lbl">温度計①<br><span class="temp-lbl-sub">60℃以上</span></div><input class="tinp" id="lt1" type="number" step="0.1" oninput="evalT(this,60,null,'ge')"><div class="tunit">℃</div></div>
+          <div class="temp-row"><div class="temp-lbl">温度計②<br><span class="temp-lbl-sub">60℃以上</span></div><input class="tinp" id="lt2" type="number" step="0.1" oninput="evalT(this,60,null,'ge')"><div class="tunit">℃</div></div>
+          <div class="temp-row" style="border-bottom:none"><div class="temp-lbl">温度計③<br><span class="temp-lbl-sub">60℃以上</span></div><input class="tinp" id="lt3" type="number" step="0.1" oninput="evalT(this,60,null,'ge')"><div class="tunit">℃</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head" onclick="toggleCard(this)">
+          <div class="card-ico" style="background:var(--info-bg)">🧊</div>
+          <div><div class="card-title">低温調理冷却報告</div><div class="card-sub">氷水 · 30分以内20℃以下</div></div>
+          <div class="card-chev open">▼</div>
+        </div>
+        <div class="card-body open">
+          <div class="photo-section">
+            <div class="note n-info" style="margin-bottom:10px">ℹ️ 全ての肉が氷水にしっかり浸かっているか確認</div>
+            <div class="photo-grid" id="lowcool-photo-grid">
+              <div class="photo-slot" style="grid-column:span 2;aspect-ratio:2/1" data-slot="氷水冷却全体" onclick="triggerCamera(this,'lowtemp_cool')"><div class="ps-icon">🧊</div><div class="ps-name">氷水・全体写真</div></div>
+              <div class="photo-slot" data-slot="冷却中心温度計" onclick="triggerCamera(this,'lowtemp_cool')"><div class="ps-icon">🌡️</div><div class="ps-name">中心温度計</div></div>
+            </div>
+          </div>
+          <div class="temp-row" style="border-bottom:none"><div class="temp-lbl">冷却後中心温度<br><span class="temp-lbl-sub">30分以内に20℃以下</span></div><input class="tinp" id="cool-temp" type="number" step="0.1" oninput="evalT(this,null,20,'le')"><div class="tunit">℃</div></div>
+        </div>
+      </div>
+      <div class="sign-row"><input class="sinp" id="lowtemp-sign" type="text" placeholder="担当者名"></div>
+    </div>
   </div>
   <div class="bot">
-    <button class="btn btn-photo" onclick="submitLowtempReport()">AIチェックして送信</button>
+    <button class="btn btn-photo" id="lowtemp-submit-btn" onclick="submitLowtempReport()">AIチェックして送信</button>
   </div>
 </div>
 
@@ -396,6 +415,20 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
     <span class="badge b-personal">個人</span>
   </div>
   <div class="sa">
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-ico" style="background:#E6F5F2">📸</div>
+        <div><div class="card-title">制服姿の写真</div><div class="card-sub">全身が写るように撮影</div></div>
+        <div class="card-chev open">▼</div>
+      </div>
+      <div class="card-body open">
+        <div class="photo-section">
+          <div class="photo-grid" id="grooming-photo-grid" style="grid-template-columns:1fr;">
+            <div class="photo-slot" style="aspect-ratio:3/4;max-width:200px;margin:0 auto;" data-slot="制服姿" onclick="triggerCamera(this,'grooming')"><div class="ps-icon">👕</div><div class="ps-name">制服姿を撮影</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="card">
       <div class="card-head" onclick="toggleCard(this)">
         <div class="card-ico" style="background:#E6F5F2">👕</div>
@@ -880,12 +913,38 @@ async function submitPhotoReport(reportType, gridId, signId, progressKey) {
   }
 }
 
+var lowtempHasReport = true;
+function toggleLowtemp(hasIt) {
+  lowtempHasReport = hasIt;
+  var yesBtn = document.getElementById('lt-yes-btn');
+  var noBtn = document.getElementById('lt-no-btn');
+  var form = document.getElementById('lowtemp-form');
+  var noneMsg = document.getElementById('lowtemp-none-msg');
+  if (hasIt) {
+    yesBtn.style.background = 'var(--brand)'; yesBtn.style.color = '#fff'; yesBtn.style.borderColor = 'var(--brand)';
+    noBtn.style.background = 'var(--bg)'; noBtn.style.color = 'var(--text2)'; noBtn.style.borderColor = 'var(--border)';
+    form.style.display = ''; noneMsg.style.display = 'none';
+  } else {
+    noBtn.style.background = 'var(--brand)'; noBtn.style.color = '#fff'; noBtn.style.borderColor = 'var(--brand)';
+    yesBtn.style.background = 'var(--bg)'; yesBtn.style.color = 'var(--text2)'; yesBtn.style.borderColor = 'var(--border)';
+    form.style.display = 'none'; noneMsg.style.display = '';
+  }
+}
+
 async function submitLowtempReport() {
   if (!currentStore) { showToast('先にログインしてください'); return; }
   showScreen('s-ai');
   animateAI();
 
   try {
+    if (!lowtempHasReport) {
+      var noneSign = document.getElementById('lowtemp-none-sign').value || '';
+      await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_none', photos: [], temp_values: null, manager_sign: noneSign, status: 'submitted' });
+      todayProgress.photo = Math.min(todayProgress.photo + 1, 3);
+      showResult('✅', '低温調理報告 送信完了', '本日は低温調理なしとして記録しました。', [{ icon:'ℹ️', text:'低温調理なし', badge:'ri-ok' }]);
+      return;
+    }
+
     const temps = {
       temp1: parseFloat(document.getElementById('lt1').value) || null,
       temp2: parseFloat(document.getElementById('lt2').value) || null,
@@ -900,17 +959,15 @@ async function submitLowtempReport() {
     ];
     const sign = document.getElementById('lowtemp-sign')?.value || '';
 
-    // temp report
     await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_temp', photos: photos.slice(0,3), temp_values: temps, manager_sign: sign, status: 'submitted' });
-    // cool report
     await sb.from('photo_reports').insert({ store_id: currentStore.id, report_type: 'lowtemp_cool', photos: photos.slice(3), temp_values: { cool_temp: temps.cool_temp }, status: 'submitted' });
 
     todayProgress.photo = Math.min(todayProgress.photo + 1, 3);
     const items = [];
-    if (temps.temp1 !== null) items.push({ icon: temps.temp1 >= 60 ? '✅' : '⚠️', text: `温度計①: ${temps.temp1}℃`, badge: temps.temp1 >= 60 ? 'ri-ok' : 'ri-ng' });
-    if (temps.temp2 !== null) items.push({ icon: temps.temp2 >= 60 ? '✅' : '⚠️', text: `温度計②: ${temps.temp2}℃`, badge: temps.temp2 >= 60 ? 'ri-ok' : 'ri-ng' });
-    if (temps.temp3 !== null) items.push({ icon: temps.temp3 >= 60 ? '✅' : '⚠️', text: `温度計③: ${temps.temp3}℃`, badge: temps.temp3 >= 60 ? 'ri-ok' : 'ri-ng' });
-    if (temps.cool_temp !== null) items.push({ icon: temps.cool_temp <= 20 ? '✅' : '⚠️', text: `冷却温度: ${temps.cool_temp}℃`, badge: temps.cool_temp <= 20 ? 'ri-ok' : 'ri-ng' });
+    if (temps.temp1 !== null) items.push({ icon: temps.temp1 >= 60 ? '✅' : '⚠️', text: '温度計①: ' + temps.temp1 + '℃', badge: temps.temp1 >= 60 ? 'ri-ok' : 'ri-ng' });
+    if (temps.temp2 !== null) items.push({ icon: temps.temp2 >= 60 ? '✅' : '⚠️', text: '温度計②: ' + temps.temp2 + '℃', badge: temps.temp2 >= 60 ? 'ri-ok' : 'ri-ng' });
+    if (temps.temp3 !== null) items.push({ icon: temps.temp3 >= 60 ? '✅' : '⚠️', text: '温度計③: ' + temps.temp3 + '℃', badge: temps.temp3 >= 60 ? 'ri-ok' : 'ri-ng' });
+    if (temps.cool_temp !== null) items.push({ icon: temps.cool_temp <= 20 ? '✅' : '⚠️', text: '冷却温度: ' + temps.cool_temp + '℃', badge: temps.cool_temp <= 20 ? 'ri-ok' : 'ri-ng' });
     showResult('✅', '低温調理報告 送信完了', 'Supabaseに保存しました。', items);
   } catch(err) {
     showResult('❌', '送信エラー', err.message, []);
@@ -922,16 +979,20 @@ async function submitLowtempReport() {
 // =====================================================
 async function submitGrooming() {
   if (!currentStore) { showToast('先にログインしてください'); return; }
+  var uniformSlot = document.querySelector('#grooming-photo-grid .photo-slot');
+  var uniformUrl = uniformSlot ? (uniformSlot.dataset.url || null) : null;
   showScreen('s-ai'); animateAI();
   try {
     const grooming = {};
     document.querySelectorAll('#s-grooming .ci').forEach(ci => { grooming[ci.dataset.key] = ci.classList.contains('chk'); });
+    grooming.uniform_photo = uniformUrl;
     const sign = document.getElementById('grooming-sign').value;
     await sb.from('personal_hygiene').insert({ store_id: currentStore.id, staff_name: currentStaff, grooming: grooming, sign: sign, status: 'ok' });
     todayProgress.personal = Math.min(todayProgress.personal + 1, 2);
-    showResult('✅', '身だしなみチェック 完了', '次は健康チェックを記入してください。',
-      Object.entries(grooming).map(([k,v]) => ({ icon: v?'✅':'⚪', text: k, badge: v?'ri-ok':'ri-warn' }))
-    );
+    var items = Object.entries(grooming).filter(function(e){return e[0] !== 'uniform_photo';}).map(function(e){return { icon: e[1]?'✅':'⚪', text: e[0], badge: e[1]?'ri-ok':'ri-warn' };});
+    if (uniformUrl) items.unshift({ icon:'✅', text:'制服写真 撮影済み', badge:'ri-ok' });
+    else items.unshift({ icon:'⚪', text:'制服写真 未撮影', badge:'ri-warn' });
+    showResult('✅', '身だしなみチェック 完了', '次は健康チェックを記入してください。', items);
   } catch(err) { showResult('❌', '送信エラー', err.message, []); }
 }
 

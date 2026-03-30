@@ -55,6 +55,14 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .ps-icon{font-size:22px;margin-bottom:4px;} .ps-name{font-size:10px;color:var(--text3);text-align:center;line-height:1.3;padding:0 4px;}
 .ps-status{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;}
 .pss-ok{background:var(--ok);color:#fff;} .pss-ng{background:var(--ng);color:#fff;} .pss-up{background:var(--warn);color:#fff;}
+.multi-photo{background:var(--bg);border-radius:10px;padding:10px;margin-bottom:8px;}
+.multi-photo-label{font-size:13px;font-weight:700;color:var(--text1);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.multi-photo-label .mp-count{font-size:11px;font-weight:400;color:var(--text3);}
+.multi-photo-grid{display:flex;gap:8px;flex-wrap:wrap;}
+.multi-photo-grid .photo-slot{width:90px;height:90px;aspect-ratio:auto;flex-shrink:0;}
+.mp-add{width:90px;height:90px;border-radius:10px;border:2px dashed var(--brand);background:var(--brand-light);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s;}
+.mp-add:active{background:var(--brand);} .mp-add:active .mp-add-icon{color:#fff;}
+.mp-add-icon{font-size:24px;color:var(--brand);line-height:1;} .mp-add-text{font-size:9px;color:var(--brand);margin-top:2px;}
 .temp-row{display:flex;align-items:center;padding:9px 14px;gap:10px;border-bottom:1px solid var(--bg);}
 .temp-row:last-child{border-bottom:none;}
 .temp-lbl{flex:1;font-size:12px;line-height:1.4;} .temp-lbl-sub{font-size:10px;color:var(--text3);}
@@ -195,7 +203,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
     </div>
     <div class="menu-item" id="mi-close" onclick="showScreen('s-close-photo')">
       <div class="mi-ico" style="background:#F0E8FF">🌙</div>
-      <div><div class="mi-title">クローズ写真報告</div><div class="mi-sub">11項目撮影</div></div>
+      <div><div class="mi-title">クローズ写真報告</div><div class="mi-sub">8項目撮影（ガス栓・冷蔵冷凍は複数可）</div></div>
       <div class="mi-right" id="mi-close-r">›</div>
     </div>
     <div class="menu-item" id="mi-lowtemp" onclick="showScreen('s-lowtemp-photo')">
@@ -297,7 +305,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 <div class="screen" id="s-close-photo">
   <div class="tb">
     <button class="tb-back" onclick="showScreen('s-home')">←</button>
-    <div class="tb-info"><div class="tb-brand" style="color:var(--photo)">クローズ写真報告</div><div class="tb-sub">11項目 · 閉店後に撮影</div></div>
+    <div class="tb-info"><div class="tb-brand" style="color:var(--photo)">クローズ写真報告</div><div class="tb-sub">8項目 · 閉店後に撮影</div></div>
     <span class="badge b-photo">写真</span>
   </div>
   <div class="sa">
@@ -305,23 +313,34 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
     <div class="card">
       <div class="card-head" onclick="toggleCard(this)">
         <div class="card-ico" style="background:var(--photo-bg)">📋</div>
-        <div><div class="card-title">撮影項目（11箇所）</div></div>
+        <div><div class="card-title">撮影項目（8箇所）</div></div>
         <div class="card-chev open">▼</div>
       </div>
       <div class="card-body open">
         <div class="photo-section">
+          <div class="multi-photo">
+            <div class="multi-photo-label">🔥 全ガス栓 <span class="mp-count">複数撮影可</span></div>
+            <div class="multi-photo-grid" id="mp-gas">
+              <div class="photo-slot" data-slot="ガス栓_1" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">1枚目</div></div>
+              <div class="mp-add" onclick="addMultiSlot('mp-gas','ガス栓','close')"><div class="mp-add-icon">+</div><div class="mp-add-text">追加</div></div>
+            </div>
+          </div>
+          <div class="multi-photo">
+            <div class="multi-photo-label">❄️ 冷蔵・冷凍庫内 <span class="mp-count">最低2枚</span></div>
+            <div class="multi-photo-grid" id="mp-fridge">
+              <div class="photo-slot" data-slot="冷蔵冷凍_1" onclick="triggerCamera(this,'close')"><div class="ps-icon">❄️</div><div class="ps-name">1枚目</div></div>
+              <div class="photo-slot" data-slot="冷蔵冷凍_2" onclick="triggerCamera(this,'close')"><div class="ps-icon">🧊</div><div class="ps-name">2枚目</div></div>
+              <div class="mp-add" onclick="addMultiSlot('mp-fridge','冷蔵冷凍','close')"><div class="mp-add-icon">+</div><div class="mp-add-text">追加</div></div>
+            </div>
+          </div>
           <div class="photo-grid" id="close-photo-grid">
-            <div class="photo-slot" data-slot="ガス栓①" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">ガス栓①</div></div>
-            <div class="photo-slot" data-slot="ガス栓②" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">ガス栓②</div></div>
-            <div class="photo-slot" data-slot="ガス栓③" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">ガス栓③</div></div>
-            <div class="photo-slot" data-slot="冷蔵庫内①" onclick="triggerCamera(this,'close')"><div class="ps-icon">❄️</div><div class="ps-name">冷蔵庫①</div></div>
-            <div class="photo-slot" data-slot="冷凍庫内①" onclick="triggerCamera(this,'close')"><div class="ps-icon">🧊</div><div class="ps-name">冷凍庫①</div></div>
             <div class="photo-slot" data-slot="包丁収納" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔪</div><div class="ps-name">包丁収納</div></div>
             <div class="photo-slot" data-slot="洗浄機" onclick="triggerCamera(this,'close')"><div class="ps-icon">🫙</div><div class="ps-name">洗浄機</div></div>
             <div class="photo-slot" data-slot="ボウルザル収納" onclick="triggerCamera(this,'close')"><div class="ps-icon">🥣</div><div class="ps-name">ボウル・ザル</div></div>
             <div class="photo-slot" data-slot="まな板保管" onclick="triggerCamera(this,'close')"><div class="ps-icon">🟩</div><div class="ps-name">まな板保管</div></div>
             <div class="photo-slot" data-slot="キッチン全体" onclick="triggerCamera(this,'close')"><div class="ps-icon">🍳</div><div class="ps-name">キッチン全体</div></div>
             <div class="photo-slot" data-slot="加熱器具" onclick="triggerCamera(this,'close')"><div class="ps-icon">🔥</div><div class="ps-name">加熱器具</div></div>
+          </div>
           </div>
         </div>
       </div>
@@ -793,6 +812,19 @@ function evalT(inp, mn, mx, mode) {
   inp.className = 'tinp ' + (ok ? 'ok' : 'ng');
 }
 
+function addMultiSlot(containerId, prefix, type) {
+  var container = document.getElementById(containerId);
+  var existing = container.querySelectorAll('.photo-slot');
+  var num = existing.length + 1;
+  var slot = document.createElement('div');
+  slot.className = 'photo-slot';
+  slot.dataset.slot = prefix + '_' + num;
+  slot.onclick = function() { triggerCamera(slot, type); };
+  slot.innerHTML = '<div class="ps-icon">' + (prefix === 'ガス栓' ? '🔥' : '❄️') + '</div><div class="ps-name">' + num + '枚目</div>';
+  var addBtn = container.querySelector('.mp-add');
+  container.insertBefore(slot, addBtn);
+}
+
 function setToiletTab(idx) {
   toiletTab = idx;
   const labels = ['オープン','中間','クローズ'];
@@ -885,12 +917,21 @@ async function submitPhotoReport(reportType, gridId, signId, progressKey) {
   animateAI();
 
   try {
-    const slots = document.querySelectorAll('#' + gridId + ' .photo-slot');
-    const photos = Array.from(slots).map(s => ({
-      slot: s.dataset.slot,
-      url: s.dataset.url || null,
-      taken: s.classList.contains('taken')
-    }));
+    var photos = [];
+    // マルチフォトコンテナからも収集（クローズ報告）
+    if (reportType === 'close') {
+      var mpContainers = document.querySelectorAll('#s-close-photo .multi-photo-grid');
+      mpContainers.forEach(function(c) {
+        c.querySelectorAll('.photo-slot').forEach(function(s) {
+          photos.push({ slot: s.dataset.slot, url: s.dataset.url || null, taken: s.classList.contains('taken') });
+        });
+      });
+    }
+    // 通常グリッドから収集
+    var slots = document.querySelectorAll('#' + gridId + ' .photo-slot');
+    Array.from(slots).forEach(function(s) {
+      photos.push({ slot: s.dataset.slot, url: s.dataset.url || null, taken: s.classList.contains('taken') });
+    });
     const sign = document.getElementById(signId)?.value || '';
 
     const { error } = await sb.from('photo_reports').insert({
@@ -905,8 +946,8 @@ async function submitPhotoReport(reportType, gridId, signId, progressKey) {
 
     todayProgress.photo = Math.min(todayProgress.photo + 1, 3);
     showResult('✅', '送信完了', '写真報告をSupabaseに保存しました。',
-      photos.filter(p => p.taken).map(p => ({ icon:'✅', text: p.slot + ' 撮影済み', badge:'ri-ok' }))
-        .concat(photos.filter(p => !p.taken).map(p => ({ icon:'⚪', text: p.slot + ' 未撮影', badge:'ri-warn' })))
+      photos.filter(function(p){return p.taken;}).map(function(p){return { icon:'✅', text: p.slot + ' 撮影済み', badge:'ri-ok' };})
+        .concat(photos.filter(function(p){return !p.taken;}).map(function(p){return { icon:'⚪', text: p.slot + ' 未撮影', badge:'ri-warn' };}))
     );
   } catch(err) {
     showResult('❌', '送信エラー', err.message, []);

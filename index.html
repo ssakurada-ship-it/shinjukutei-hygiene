@@ -164,11 +164,13 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
   </div>
   <div class="login-wrap">
     <div class="login-label">店舗を選択</div>
-    <select class="login-sel" id="login-store">
+    <select class="login-sel" id="login-store" onchange="loadStaffForStore(this.value)">
       <option value="">-- 店舗を選んでください --</option>
     </select>
-    <div class="login-label">お名前（担当者）</div>
-    <input class="sinp" id="login-name" type="text" placeholder="例：田中" style="width:100%;margin-bottom:14px">
+    <div class="login-label">スタッフを選択</div>
+    <select class="login-sel" id="login-staff" disabled>
+      <option value="">-- 先に店舗を選んでください --</option>
+    </select>
     <button class="btn btn-main" id="login-btn" onclick="doLogin()">ログイン</button>
     <div id="login-err" style="color:var(--ng);font-size:12px;margin-top:10px;text-align:center"></div>
   </div>
@@ -182,6 +184,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
     <div class="hero-date" id="hdate"></div>
     <div class="hero-title">衛生管理報告</div>
     <div class="hero-store" id="hero-store">📍 店舗名</div>
+    <div style="font-size:13px;opacity:.85;margin-top:4px" id="hero-staff">👤 スタッフ名</div>
   </div>
   <div class="cat-tabs">
     <div class="cat-tab active" id="tab-photo" onclick="switchCat('photo',this)">📸 写真報告</div>
@@ -718,6 +721,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // =====================================================
 let currentStore = null; // {id, name}
 let currentStaff = ''; // 名前
+let currentStaffId = null; // UUID
 let toiletTab = 0;
 let activePhotoSlot = null;
 let activePhotoType = '';
@@ -748,24 +752,98 @@ async function loadStores() {
   }
 }
 
+async function loadStaffForStore(storeId) {
+  var sel = document.getElementById('login-staff');
+  sel.innerHTML = '<option value="">-- スタッフを選んでください --</option>';
+  sel.disabled = true;
+  if (!storeId) return;
+  try {
+    var res = await sb.from('staff').select('id,name').eq('store_id', storeId).eq('is_active', true).order('name');
+    if (res.error) throw res.error;
+    (res.data || []).forEach(function(s) {
+      var opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name;
+      sel.appendChild(opt);
+    });
+    sel.disabled = false;
+  } catch(e) {
+    showToast('スタッフ取得エラー: ' + e.message);
+  }
+}
+
 // =====================================================
 // ログイン
 // =====================================================
 async function doLogin() {
   const storeId = document.getElementById('login-store').value;
-  const name = document.getElementById('login-name').value.trim();
+  const staffSel = document.getElementById('login-staff');
+  const staffId = staffSel.value;
   const err = document.getElementById('login-err');
   if (!storeId) { err.textContent = '店舗を選択してください'; return; }
-  if (!name) { err.textContent = '名前を入力してください'; return; }
+  if (!staffId) { err.textContent = 'スタッフを選択してください'; return; }
 
   const storeName = document.getElementById('login-store').options[document.getElementById('login-store').selectedIndex].text;
+  const staffName = staffSel.options[staffSel.selectedIndex].text;
   currentStore = { id: storeId, name: storeName };
-  currentStaff = name;
+  currentStaff = staffName;
+  currentStaffId = staffId;
 
   document.getElementById('hero-store').textContent = '📍 ' + storeName;
+  document.getElementById('hero-staff').textContent = '👤 ' + staffName;
   err.textContent = '';
+
+  await loadTodayProgress();
   showScreen('s-home');
   updateProgress();
+}
+
+async function loadTodayProgress() {
+  try {
+    var today = new Date().toISOString().split('T')[0];
+    var sid = currentStore.id;
+    var sname = currentStaff;
+
+    // 写真報告
+    var pr = await sb.from('photo_reports').select('report_type').eq('store_id', sid).eq('report_date', today);
+    var photoTypes = (pr.data || []).map(function(r) { return r.report_type; });
+    var photoCount = 0;
+    if (photoTypes.indexOf('open') >= 0) photoCount++;
+    if (photoTypes.indexOf('close') >= 0) photoCount++;
+    if (photoTypes.indexOf('lowtemp_temp') >= 0 || photoTypes.indexOf('lowtemp_none') >= 0) photoCount++;
+
+    // 個人衛生（この個人分）
+    var ph = await sb.from('personal_hygiene').select('grooming,health').eq('store_id', sid).eq('staff_name', sname).eq('report_date', today);
+    var personalCount = 0;
+    (ph.data || []).forEach(function(r) {
+      if (r.grooming) personalCount++;
+      if (r.health) personalCount++;
+    });
+
+    // 店舗全体
+    var sr = await sb.from('store_reports').select('report_type').eq('store_id', sid).eq('report_date', today);
+    var storeCount = (sr.data || []).length;
+
+    todayProgress.photo = Math.min(photoCount, 3);
+    todayProgress.personal = Math.min(personalCount, 2);
+    todayProgress.store = Math.min(storeCount, 4);
+
+    // メニューの完了状態を反映
+    if (photoTypes.indexOf('open') >= 0) markMenuItem('mi-open');
+    if (photoTypes.indexOf('close') >= 0) markMenuItem('mi-close');
+    if (photoTypes.indexOf('lowtemp_temp') >= 0 || photoTypes.indexOf('lowtemp_none') >= 0) markMenuItem('mi-lowtemp');
+    if (personalCount >= 1) markMenuItem('mi-grooming');
+    if (personalCount >= 2) markMenuItem('mi-health');
+  } catch(e) {
+    // エラーでも進行は可能
+  }
+}
+
+function markMenuItem(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var right = el.querySelector('.mi-right');
+  if (right) { right.textContent = '✓'; right.style.color = 'var(--ok)'; right.style.fontWeight = '700'; }
 }
 
 // =====================================================
@@ -1156,19 +1234,31 @@ async function loadDashboard() {
     const { data: stores } = await sb.from('stores').select('id,name').eq('is_active', true);
     const { data: photoRep } = await sb.from('photo_reports').select('store_id,report_type,status').eq('report_date', today);
     const { data: storeRep } = await sb.from('store_reports').select('store_id,report_type').eq('report_date', today);
-    const { data: personalRep } = await sb.from('personal_hygiene').select('store_id').eq('report_date', today);
+    const { data: personalRep } = await sb.from('personal_hygiene').select('store_id,staff_name,grooming,health').eq('report_date', today);
+    const { data: allStaff } = await sb.from('staff').select('id,store_id,name').eq('is_active', true);
 
     let submitted = 0;
     const storeStatuses = stores.map(store => {
       const pr = (photoRep||[]).filter(r => r.store_id === store.id);
       const sr = (storeRep||[]).filter(r => r.store_id === store.id);
       const per = (personalRep||[]).filter(r => r.store_id === store.id);
+      const storeStaff = (allStaff||[]).filter(r => r.store_id === store.id);
       const hasPhoto = pr.length > 0;
       const hasStore = sr.length > 0;
       const hasPer = per.length > 0;
       const hasNG = pr.some(r => r.status === 'ng');
       if (hasPhoto || hasStore || hasPer) submitted++;
-      return { store, hasPhoto, hasStore, hasPer, hasNG };
+
+      // スタッフ別の提出状況
+      var staffStatus = storeStaff.map(function(s) {
+        var myReports = per.filter(function(r) { return r.staff_name === s.name; });
+        var hasGrooming = myReports.some(function(r) { return r.grooming !== null; });
+        var hasHealth = myReports.some(function(r) { return r.health !== null; });
+        return { name: s.name, grooming: hasGrooming, health: hasHealth, complete: hasGrooming && hasHealth };
+      });
+      var completedStaff = staffStatus.filter(function(s) { return s.complete; }).length;
+
+      return { store: store, hasPhoto: hasPhoto, hasStore: hasStore, hasPer: hasPer, hasNG: hasNG, staffStatus: staffStatus, completedStaff: completedStaff, totalStaff: storeStaff.length };
     });
 
     document.getElementById('dash-rate').textContent = Math.round(submitted/stores.length*100) + '%';
@@ -1176,28 +1266,42 @@ async function loadDashboard() {
     document.getElementById('dash-missing').textContent = storeStatuses.filter(s => !s.hasPhoto && !s.hasStore && !s.hasPer).length;
 
     const container = document.getElementById('dash-stores');
-    container.innerHTML = storeStatuses.map(({ store, hasPhoto, hasStore, hasPer, hasNG }) => `
-      <div class="store-row">
-        <div class="sr-head" onclick="this.nextElementSibling.classList.toggle('open')">
-          <div>
-            <div class="sr-name">${store.name}</div>
-            <div class="sr-sub" style="color:${hasNG?'var(--ng)':hasPhoto||hasStore||hasPer?'var(--ok)':'var(--text3)'}">${hasNG?'⚠️ NGあり':hasPhoto||hasStore||hasPer?'✓ 提出済み':'未提出'}</div>
-          </div>
-          <div class="sr-badges">
-            <span class="badge ${hasPhoto?'b-ok':'b-gray'}">📸</span>
-            <span class="badge ${hasPer?'b-ok':'b-gray'}">👤</span>
-            <span class="badge ${hasStore?'b-ok':'b-gray'}">🏪</span>
-          </div>
-        </div>
-        <div class="sr-body">
-          <div class="sr-alert"><span style="color:${hasPhoto?'var(--ok)':'var(--text3)'}">${hasPhoto?'✓':'—'}</span>写真報告</div>
-          <div class="sr-alert"><span style="color:${hasPer?'var(--ok)':'var(--text3)'}">${hasPer?'✓':'—'}</span>個人衛生</div>
-          <div class="sr-alert"><span style="color:${hasStore?'var(--ok)':'var(--text3)'}">${hasStore?'✓':'—'}</span>店舗全体</div>
-        </div>
-      </div>
-    `).join('');
+    container.innerHTML = storeStatuses.map(function(item) {
+      var store = item.store;
+      var staffHtml = item.staffStatus.map(function(s) {
+        return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;">' +
+          '<span style="flex:1;color:var(--text)">' + s.name + '</span>' +
+          '<span class="badge ' + (s.grooming ? 'b-ok' : 'b-gray') + '" style="font-size:10px">身</span>' +
+          '<span class="badge ' + (s.health ? 'b-ok' : 'b-gray') + '" style="font-size:10px">健</span>' +
+        '</div>';
+      }).join('');
+
+      var perLabel = item.totalStaff > 0 ? (item.completedStaff + '/' + item.totalStaff + '人') : '—';
+
+      return '<div class="store-row">' +
+        '<div class="sr-head" onclick="this.nextElementSibling.classList.toggle(\'open\')">' +
+          '<div>' +
+            '<div class="sr-name">' + store.name + '</div>' +
+            '<div class="sr-sub" style="color:' + (item.hasNG ? 'var(--ng)' : (item.hasPhoto||item.hasStore||item.hasPer ? 'var(--ok)' : 'var(--text3)')) + '">' +
+              (item.hasNG ? '⚠️ NGあり' : (item.hasPhoto||item.hasStore||item.hasPer ? '✓ 提出済み' : '未提出')) +
+            '</div>' +
+          '</div>' +
+          '<div class="sr-badges">' +
+            '<span class="badge ' + (item.hasPhoto ? 'b-ok' : 'b-gray') + '">📸</span>' +
+            '<span class="badge ' + (item.completedStaff === item.totalStaff && item.totalStaff > 0 ? 'b-ok' : item.completedStaff > 0 ? 'b-warn' : 'b-gray') + '">👤' + perLabel + '</span>' +
+            '<span class="badge ' + (item.hasStore ? 'b-ok' : 'b-gray') + '">🏪</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="sr-body">' +
+          '<div class="sr-alert"><span style="color:' + (item.hasPhoto ? 'var(--ok)' : 'var(--text3)') + '">' + (item.hasPhoto ? '✓' : '—') + '</span>写真報告</div>' +
+          '<div class="sr-alert"><span style="color:' + (item.hasStore ? 'var(--ok)' : 'var(--text3)') + '">' + (item.hasStore ? '✓' : '—') + '</span>店舗全体</div>' +
+          '<div style="padding:8px 0 4px;font-size:12px;font-weight:700;color:var(--text2)">個人衛生 (' + item.completedStaff + '/' + item.totalStaff + '人完了)</div>' +
+          staffHtml +
+        '</div>' +
+      '</div>';
+    }).join('');
   } catch(err) {
-    document.getElementById('dash-stores').innerHTML = `<div class="note n-ng">エラー: ${err.message}</div>`;
+    document.getElementById('dash-stores').innerHTML = '<div class="note n-ng">エラー: ' + err.message + '</div>';
   }
 }
 </script>

@@ -726,9 +726,25 @@ async function resolveAlert(id,btn) {
     loadAlarms(); loadToday();
   } catch(e){showToast('エラー: '+e.message);}
 }
-function sendAlarmNotice(id,storeName,message) {
-  alert('【'+decodeURIComponent(storeName)+'】へのアラーム通知\n\n'+decodeURIComponent(message)+'\n\n※現在はアプリ内通知のみ。LINE連携後は自動送信されます。');
-  showToast('📢 '+decodeURIComponent(storeName)+' に通知しました');
+async function sendAlarmNotice(id,storeName,message) {
+  var store=decodeURIComponent(storeName);
+  var msg=decodeURIComponent(message);
+  var webhookUrl=window.ENV_SLACK_WEBHOOK||'';
+  if(!webhookUrl){
+    alert('Slack Webhook未設定です。Vercel環境変数 ENV_SLACK_WEBHOOK_HYGIENE を設定してください。');
+    return;
+  }
+  try {
+    var payload={text:'🚨 *衛生管理アラーム*\n\n*店舗:* '+store+'\n*内容:* '+msg+'\n\n<https://shinjukutei-hygiene.vercel.app/admin.html|管理画面で確認>'};
+    var res=await fetch(webhookUrl,{method:'POST',body:JSON.stringify(payload)});
+    if(res.ok){
+      showToast('✅ Slackに通知しました（#shinjukutei-hygiene-alert）');
+    } else {
+      showToast('⚠️ Slack送信失敗: '+res.status);
+    }
+  } catch(e){
+    showToast('⚠️ Slack送信エラー: '+e.message);
+  }
 }
 
 /* ===== WEEKLY ===== */

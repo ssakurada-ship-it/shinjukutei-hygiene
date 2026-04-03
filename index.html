@@ -990,6 +990,26 @@ async function handlePhotoSelected(e) {
 // =====================================================
 async function submitPhotoReport(reportType, gridId, signId, progressKey) {
   if (!currentStore) { showToast('先にログインしてください'); return; }
+
+  // バリデーション: 必須写真スロットが全て撮影済みか確認
+  var allSlots = [];
+  if (reportType === 'close') {
+    var mpContainers = document.querySelectorAll('#s-close-photo .multi-photo-grid');
+    mpContainers.forEach(function(c) {
+      c.querySelectorAll('.photo-slot').forEach(function(s) { allSlots.push(s); });
+    });
+  }
+  document.querySelectorAll('#' + gridId + ' .photo-slot').forEach(function(s) { allSlots.push(s); });
+  var untaken = allSlots.filter(function(s) { return !s.classList.contains('taken'); });
+  if (untaken.length > 0) {
+    var names = untaken.slice(0, 3).map(function(s) { return s.dataset.slot; }).join('、');
+    showToast('未撮影: ' + names + (untaken.length > 3 ? ' 他' + (untaken.length - 3) + '箇所' : ''), 4000);
+    untaken[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    untaken[0].classList.add('ng-slot');
+    setTimeout(function() { untaken[0].classList.remove('ng-slot'); }, 3000);
+    return;
+  }
+
   showScreen('s-ai');
   animateAI();
 
@@ -1051,6 +1071,26 @@ function toggleLowtemp(hasIt) {
 
 async function submitLowtempReport() {
   if (!currentStore) { showToast('先にログインしてください'); return; }
+
+  // バリデーション: 「あり」の場合、温度入力と写真を確認
+  if (lowtempHasReport) {
+    var lt1v = document.getElementById('lt1').value;
+    var lt2v = document.getElementById('lt2').value;
+    var lt3v = document.getElementById('lt3').value;
+    if (!lt1v && !lt2v && !lt3v) {
+      showToast('温度計の値を最低1つ入力してください', 4000);
+      document.getElementById('lt1').focus();
+      return;
+    }
+    var ltSlots = document.querySelectorAll('#lowtemp-photo-grid .photo-slot, #lowcool-photo-grid .photo-slot');
+    var ltUntaken = Array.from(ltSlots).filter(function(s) { return !s.classList.contains('taken'); });
+    if (ltUntaken.length > 0) {
+      showToast('未撮影: ' + ltUntaken.map(function(s){ return s.dataset.slot; }).join('、'), 4000);
+      ltUntaken[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+  }
+
   showScreen('s-ai');
   animateAI();
 
@@ -1097,6 +1137,21 @@ async function submitLowtempReport() {
 // =====================================================
 async function submitGrooming() {
   if (!currentStore) { showToast('先にログインしてください'); return; }
+
+  // バリデーション: 身だしなみチェック項目が1つも入力されていない場合ブロック
+  var groomingItems = document.querySelectorAll('#s-grooming .ci');
+  var groomingChecked = Array.from(groomingItems).filter(function(ci) { return ci.classList.contains('chk'); });
+  if (groomingChecked.length === 0) {
+    showToast('身だしなみ項目を確認してチェックしてください', 4000);
+    return;
+  }
+  // バリデーション: 氏名未入力
+  if (!document.getElementById('grooming-sign').value.trim()) {
+    showToast('氏名を入力してください', 3000);
+    document.getElementById('grooming-sign').focus();
+    return;
+  }
+
   var uniformSlot = document.querySelector('#grooming-photo-grid .photo-slot');
   var uniformUrl = uniformSlot ? (uniformSlot.dataset.url || null) : null;
   showScreen('s-ai'); animateAI();
@@ -1116,6 +1171,27 @@ async function submitGrooming() {
 
 async function submitHealth() {
   if (!currentStore) { showToast('先にログインしてください'); return; }
+
+  // バリデーション: 体温未入力
+  if (!document.getElementById('body-temp').value) {
+    showToast('体温を入力してください', 3000);
+    document.getElementById('body-temp').focus();
+    return;
+  }
+  // バリデーション: 症状確認が1つもチェックされていない場合ブロック
+  var healthItems = document.querySelectorAll('#s-health .ci');
+  var healthChecked = Array.from(healthItems).filter(function(ci) { return ci.classList.contains('chk'); });
+  if (healthChecked.length === 0) {
+    showToast('症状確認項目をチェックしてください', 4000);
+    return;
+  }
+  // バリデーション: 氏名未入力
+  if (!document.getElementById('health-sign').value.trim()) {
+    showToast('氏名を入力してください', 3000);
+    document.getElementById('health-sign').focus();
+    return;
+  }
+
   showScreen('s-ai'); animateAI();
   try {
     const health = { body_temp: parseFloat(document.getElementById('body-temp').value) || null };
@@ -1143,8 +1219,15 @@ async function submitStoreReport(type, data) {
 }
 
 function submitTempCheck() {
+  // バリデーション: 最低1つの温度入力が必要
+  var tempInputs = document.querySelectorAll('#s-tempcheck input[data-eq]');
+  var hasAnyTemp = Array.from(tempInputs).some(function(inp) { return inp.value !== ''; });
+  if (!hasAnyTemp) {
+    showToast('温度を最低1箇所入力してください', 4000);
+    return;
+  }
   const data = {};
-  document.querySelectorAll('#s-tempcheck input[data-eq]').forEach(inp => {
+  tempInputs.forEach(inp => {
     const key = inp.dataset.eq + '_' + inp.dataset.time;
     data[key] = inp.value ? parseFloat(inp.value) : null;
   });
@@ -1152,6 +1235,13 @@ function submitTempCheck() {
 }
 
 function submitDelivery() {
+  // バリデーション: チェック項目が1つも入力されていない場合ブロック
+  var deliveryItems = document.querySelectorAll('#s-delivery .ci');
+  var deliveryChecked = Array.from(deliveryItems).filter(function(ci) { return ci.classList.contains('chk'); });
+  if (deliveryChecked.length === 0) {
+    showToast('納品確認項目をチェックしてください', 4000);
+    return;
+  }
   const data = {};
   document.querySelectorAll('#s-delivery .ci').forEach(ci => { data[ci.dataset.key] = ci.classList.contains('chk'); });
   data.frozen_temp = parseFloat(document.getElementById('delivery-temp').value) || null;
@@ -1159,12 +1249,26 @@ function submitDelivery() {
 }
 
 function submitToilet() {
+  // バリデーション: チェック項目が1つも入力されていない場合ブロック
+  var toiletItems = document.querySelectorAll('#toilet-body .ci');
+  var toiletChecked = Array.from(toiletItems).filter(function(ci) { return ci.classList.contains('chk'); });
+  if (toiletChecked.length === 0) {
+    showToast('トイレチェック項目を確認してください', 4000);
+    return;
+  }
   const data = { timing: ['open','mid','close'][toiletTab] };
   document.querySelectorAll('#toilet-body .ci').forEach(ci => { data[ci.dataset.key] = ci.classList.contains('chk'); });
   submitStoreReport('toilet_' + data.timing, data);
 }
 
 function submitFoodTemp() {
+  // バリデーション: 最低1つの温度入力が必要
+  var ftIds = ['ft1','ft2','ft3','ft4','ft5','ft6','ft7','ft8'];
+  var hasAnyFt = ftIds.some(function(id) { return document.getElementById(id).value !== ''; });
+  if (!hasAnyFt) {
+    showToast('食品温度を最低1項目入力してください', 4000);
+    return;
+  }
   const ids = ['ft1','ft2','ft3','ft4','ft5','ft6','ft7','ft8'];
   const names = ['raw_cold','heated','frying_oil','hot_hold','reheat','cooling','first_fried','ramen_soup'];
   const data = {};

@@ -896,8 +896,8 @@ async function loadTodayProgress() {
     var sid = currentStore.id;
     var sname = currentStaff;
 
-    // 写真報告（店舗全体）
-    var pr = await sb.from('photo_reports').select('report_type,staff_name').eq('store_id', sid).eq('report_date', today);
+    // 写真報告（店舗全体 — photo_reportsにstaff_nameカラムは存在しない）
+    var pr = await sb.from('photo_reports').select('report_type').eq('store_id', sid).eq('report_date', today);
     var photoRows = pr.data || [];
     var photoTypes = photoRows.map(function(r) { return r.report_type; });
     var photoCount = 0;
@@ -928,26 +928,10 @@ async function loadTodayProgress() {
     todayProgress.personal = Math.min(personalCount, 2);
     todayProgress.store = Math.min(storeCount, 6);
 
-    // 写真報告メニューの完了状態を反映
-    // 自分が提出者かどうかを確認（staff_nameフィールドがあれば）
-    var openRows = photoRows.filter(function(r) { return r.report_type === 'open'; });
-    var closeRows = photoRows.filter(function(r) { return r.report_type === 'close'; });
-    var lowtempRows = photoRows.filter(function(r) {
-      return r.report_type === 'lowtemp_temp' || r.report_type === 'lowtemp_cool' || r.report_type === 'lowtemp_none';
-    });
-
-    if (openRows.length > 0) {
-      var openByMe = openRows.some(function(r) { return !r.staff_name || r.staff_name === sname; });
-      markMenuItem('mi-open', !openByMe);
-    }
-    if (closeRows.length > 0) {
-      var closeByMe = closeRows.some(function(r) { return !r.staff_name || r.staff_name === sname; });
-      markMenuItem('mi-close', !closeByMe);
-    }
-    if (lowtempRows.length > 0) {
-      var lowtempByMe = lowtempRows.some(function(r) { return !r.staff_name || r.staff_name === sname; });
-      markMenuItem('mi-lowtemp', !lowtempByMe);
-    }
+    // 写真報告メニューの完了状態を反映（店舗として提出済みなら全員に✓）
+    if (photoTypes.indexOf('open') >= 0) markMenuItem('mi-open');
+    if (photoTypes.indexOf('close') >= 0) markMenuItem('mi-close');
+    if (photoTypes.indexOf('lowtemp_temp') >= 0 || photoTypes.indexOf('lowtemp_cool') >= 0 || photoTypes.indexOf('lowtemp_none') >= 0) markMenuItem('mi-lowtemp');
 
     // 個人衛生メニュー（自分の提出分）
     if (personalCount >= 1) markMenuItem('mi-grooming');
@@ -1546,89 +1530,120 @@ var _photoTypeOrder = ['open', 'close', 'lowtemp_temp', 'lowtemp_cool', 'lowtemp
 async function loadDashboard() {
   var container = document.getElementById('dash-content');
   try {
-    var today = new Date().toISOString().split('T')[0];
+    // 当日 = 提出状況、前日 = AI監査結果
+    var todayDate = new Date();
+    var today = todayDate.toISOString().split('T')[0];
+    var yesterdayDate = new Date(todayDate);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    var yesterday = yesterdayDate.toISOString().split('T')[0];
     var sid = currentStore.id;
 
-    // 店舗名を表示
     document.getElementById('dash-store-name').textContent = currentStore.name;
 
-    // 並列でデータ取得
-    var prRes = sb.from('photo_reports').select('report_type,status,ai_summary').eq('store_id', sid).eq('report_date', today);
+    // 並列でデータ取得（当日分 + 前日の写真監査）
+    var prTodayRes = sb.from('photo_reports').select('report_type').eq('store_id', sid).eq('report_date', today);
+    var prYestRes = sb.from('photo_reports').select('report_type,status,ai_summary').eq('store_id', sid).eq('report_date', yesterday);
     var srRes = sb.from('store_reports').select('report_type').eq('store_id', sid).eq('report_date', today);
     var phRes = sb.from('personal_hygiene').select('staff_name,grooming,health').eq('store_id', sid).eq('report_date', today);
     var stRes = sb.from('staff').select('id,name').eq('store_id', sid).eq('is_active', true).order('name');
 
-    var prData = await prRes;
+    var prTodayData = await prTodayRes;
+    var prYestData = await prYestRes;
     var srData = await srRes;
     var phData = await phRes;
     var stData = await stRes;
 
-    if (prData.error) throw prData.error;
+    if (prTodayData.error) throw prTodayData.error;
+    if (prYestData.error) throw prYestData.error;
     if (srData.error) throw srData.error;
     if (phData.error) throw phData.error;
     if (stData.error) throw stData.error;
 
-    var photoReports = prData.data || [];
+    var todayPhotos = prTodayData.data || [];
+    var yesterdayPhotos = prYestData.data || [];
     var storeReports = srData.data || [];
     var personalReports = phData.data || [];
     var staffList = stData.data || [];
 
     // ----------------------
-    // 写真報告セクション構築
+    // 📋 本日の提出状況
     // ----------------------
-    var photoHtml = '<div class="sec-lbl">📸 写真報告</div>';
+    var todayPhotoTypes = todayPhotos.map(function(r) { return r.report_type; });
+    var uniqueStoreTypes = [];
+    storeReports.forEach(function(r) {
+      if (uniqueStoreTypes.indexOf(r.report_type) < 0) uniqueStoreTypes.push(r.report_type);
+    });
+    var completedPersonal = personalReports.filter(function(r) { return r.grooming && r.health; }).length;
 
-    // 提出済みのreport_typeを収集
-    var submittedPhotoTypes = photoReports.map(function(r) { return r.report_type; });
+    // 提出チェック項目
+    var checkItems = [
+      { label: 'オープン写真', done: todayPhotoTypes.indexOf('open') >= 0 },
+      { label: 'クローズ写真', done: todayPhotoTypes.indexOf('close') >= 0 },
+      { label: '低温調理', done: todayPhotoTypes.indexOf('lowtemp_temp') >= 0 || todayPhotoTypes.indexOf('lowtemp_cool') >= 0 || todayPhotoTypes.indexOf('lowtemp_none') >= 0 },
+      { label: '個人衛生', done: completedPersonal > 0 },
+      { label: '温度チェック', done: uniqueStoreTypes.indexOf('tempcheck') >= 0 },
+      { label: '納品チェック', done: uniqueStoreTypes.indexOf('delivery') >= 0 },
+      { label: 'トイレ清掃', done: uniqueStoreTypes.indexOf('toilet_open') >= 0 || uniqueStoreTypes.indexOf('toilet_mid') >= 0 || uniqueStoreTypes.indexOf('toilet_close') >= 0 },
+      { label: '食品温度', done: uniqueStoreTypes.indexOf('foodtemp') >= 0 },
+    ];
+    var doneCount = checkItems.filter(function(c) { return c.done; }).length;
 
-    // 提出済み写真があれば展開可能なカードを生成
-    if (photoReports.length === 0) {
-      photoHtml += '<div class="card"><div class="card-head" style="cursor:default"><div class="card-ico" style="background:var(--ng-bg)">❌</div><div class="card-title">写真報告<div class="card-sub" style="color:var(--ng)">本日未提出</div></div></div></div>';
+    var statusHtml = '<div class="sec-lbl">📋 本日の提出状況（' + doneCount + '/' + checkItems.length + '）</div>';
+    statusHtml += '<div class="card"><div style="display:grid;grid-template-columns:1fr 1fr;gap:0">';
+    checkItems.forEach(function(item, idx) {
+      var borderR = idx % 2 === 0 ? 'border-right:1px solid var(--border-light);' : '';
+      var borderB = idx < checkItems.length - 2 ? 'border-bottom:1px solid var(--border-light);' : '';
+      statusHtml += '<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;' + borderR + borderB + '">';
+      statusHtml += '<span style="font-size:14px;color:' + (item.done ? 'var(--ok)' : 'var(--text3)') + ';font-weight:700">' + (item.done ? '✓' : '—') + '</span>';
+      statusHtml += '<span style="font-size:12px;color:' + (item.done ? 'var(--text)' : 'var(--text3)') + '">' + _esc(item.label) + '</span>';
+      statusHtml += '</div>';
+    });
+    statusHtml += '</div></div>';
+
+    // ----------------------
+    // 📸 前日のAI監査結果
+    // ----------------------
+    var auditHtml = '<div class="sec-lbl">📸 前日のAI監査結果（' + _esc(yesterday) + '）</div>';
+
+    if (yesterdayPhotos.length === 0) {
+      auditHtml += '<div class="card"><div style="padding:16px;font-size:12px;color:var(--text3);text-align:center">前日の写真報告なし</div></div>';
     } else {
-      // 各写真報告カード
-      photoReports.forEach(function(r) {
-        var label = _tj(r.report_type);
-        var ai = r.ai_summary;
-        var color, ico, scoreTxt;
-        if (!ai) {
-          color = 'var(--text3)'; ico = '⏳'; scoreTxt = '監査待ち';
-        } else {
-          color = ai.overall === 'OK' ? 'var(--ok)' : ai.overall === 'WARNING' ? 'var(--warn)' : 'var(--ng)';
-          ico = ai.overall === 'OK' ? '✅' : ai.overall === 'WARNING' ? '⚠️' : '🚨';
-          scoreTxt = ai.score + '点';
-        }
-        var cardId = 'ph-card-' + r.report_type.replace(/_/g, '-');
-        photoHtml += '<div class="card">';
-        photoHtml += '<div class="card-head" onclick="toggleCard(this)">';
-        photoHtml += '<div class="card-ico" style="background:var(--photo-bg)">' + ico + '</div>';
-        photoHtml += '<div style="flex:1"><div class="card-title">' + _esc(label) + '</div>';
-        photoHtml += '<div class="card-sub" style="color:' + color + '">' + scoreTxt + '</div></div>';
-        photoHtml += '<div class="card-chev">▼</div>';
-        photoHtml += '</div>';
-        photoHtml += '<div class="card-body" style="padding:8px 14px">';
-        if (!ai) {
-          photoHtml += '<div style="font-size:12px;color:var(--text3);padding:8px 0">AI監査処理中...</div>';
-        } else {
-          photoHtml += _renderDashAudit([r]);
-        }
-        photoHtml += '</div></div>';
-      });
-
-      // 未提出のreport_typeを表示
-      var missingPhotos = [];
-      if (submittedPhotoTypes.indexOf('open') < 0) missingPhotos.push('オープン写真');
-      if (submittedPhotoTypes.indexOf('close') < 0) missingPhotos.push('クローズ写真');
-      var hasLowtemp = submittedPhotoTypes.indexOf('lowtemp_temp') >= 0 || submittedPhotoTypes.indexOf('lowtemp_cool') >= 0 || submittedPhotoTypes.indexOf('lowtemp_none') >= 0;
-      if (!hasLowtemp) missingPhotos.push('低温調理');
-      if (missingPhotos.length > 0) {
-        photoHtml += '<div class="note n-ng">❌ 未提出: ' + _esc(missingPhotos.join('、')) + '</div>';
+      var hasAudit = yesterdayPhotos.some(function(r) { return r.ai_summary; });
+      if (!hasAudit) {
+        auditHtml += '<div class="card"><div style="padding:16px;font-size:12px;color:var(--text3);text-align:center">⏳ 監査は毎朝7:00に実行されます</div></div>';
+      } else {
+        yesterdayPhotos.forEach(function(r) {
+          var label = _tj(r.report_type);
+          var ai = r.ai_summary;
+          var color, ico, scoreTxt;
+          if (!ai) {
+            color = 'var(--text3)'; ico = '⏳'; scoreTxt = '監査待ち';
+          } else {
+            color = ai.overall === 'OK' ? 'var(--ok)' : ai.overall === 'WARNING' ? 'var(--warn)' : 'var(--ng)';
+            ico = ai.overall === 'OK' ? '✅' : ai.overall === 'WARNING' ? '⚠️' : '🚨';
+            scoreTxt = ai.score + '点';
+          }
+          auditHtml += '<div class="card">';
+          auditHtml += '<div class="card-head" onclick="toggleCard(this)">';
+          auditHtml += '<div class="card-ico" style="background:var(--photo-bg)">' + ico + '</div>';
+          auditHtml += '<div style="flex:1"><div class="card-title">' + _esc(label) + '</div>';
+          auditHtml += '<div class="card-sub" style="color:' + color + '">' + scoreTxt + '</div></div>';
+          auditHtml += '<div class="card-chev">▼</div>';
+          auditHtml += '</div>';
+          auditHtml += '<div class="card-body" style="padding:8px 14px">';
+          if (!ai) {
+            auditHtml += '<div style="font-size:12px;color:var(--text3);padding:8px 0">監査待ち</div>';
+          } else {
+            auditHtml += _renderDashAudit([r]);
+          }
+          auditHtml += '</div></div>';
+        });
       }
     }
 
     // ----------------------
-    // 個人衛生セクション構築
+    // 👤 個人衛生（当日）
     // ----------------------
-    var completedPersonal = personalReports.filter(function(r) { return r.grooming && r.health; }).length;
     var personalHtml = '<div class="sec-lbl">👤 個人衛生（' + completedPersonal + '/' + staffList.length + '人完了）</div>';
     personalHtml += '<div class="card">';
     if (staffList.length === 0) {
@@ -1653,16 +1668,9 @@ async function loadDashboard() {
     personalHtml += '</div>';
 
     // ----------------------
-    // 店舗全体チェックセクション構築
+    // 🏪 店舗全体チェック（当日）
     // ----------------------
-    var submittedStoreTypes = storeReports.map(function(r) { return r.report_type; });
-    // 重複排除
-    var uniqueStoreTypes = [];
-    submittedStoreTypes.forEach(function(t) {
-      if (uniqueStoreTypes.indexOf(t) < 0) uniqueStoreTypes.push(t);
-    });
     var storeCompleted = uniqueStoreTypes.length;
-
     var storeHtml = '<div class="sec-lbl">🏪 店舗全体チェック（' + storeCompleted + '/' + _storeTypeOrder.length + '完了）</div>';
     storeHtml += '<div class="card">';
     _storeTypeOrder.forEach(function(type, idx) {
@@ -1676,7 +1684,7 @@ async function loadDashboard() {
     });
     storeHtml += '</div>';
 
-    container.innerHTML = photoHtml + personalHtml + storeHtml;
+    container.innerHTML = statusHtml + auditHtml + personalHtml + storeHtml;
   } catch(err) {
     console.error('[loadDashboard] エラー:', err);
     container.innerHTML = '<div class="note n-ng">エラー: ' + _esc(err.message) + '</div>';

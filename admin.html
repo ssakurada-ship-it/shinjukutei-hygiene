@@ -498,15 +498,15 @@ async function loadToday() {
   document.getElementById('store-list').innerHTML = '<div class="loading">読み込み中...</div>';
   try {
     var results = await Promise.all([
-      sb.from('photo_reports').select('store_id,report_type,status,submitted_at').eq('report_date',today),
+      sb.from('photo_reports').select('store_id,report_type,status,submitted_at,ai_summary').eq('report_date',today),
       sb.from('store_reports').select('store_id,report_type,status,submitted_at').eq('report_date',today),
       sb.from('personal_hygiene').select('store_id,staff_name,status,submitted_at').eq('report_date',today),
       sb.from('alerts').select('*').eq('is_resolved',false)
     ]);
     var pr=results[0].data||[], sr=results[1].data||[], per=results[2].data||[], sa=results[3].data||[];
     var submitted=0, alarmCount=0, missing=0;
-    var photoLabels={open:'オープン',close:'クローズ',lowtemp_temp:'低温(温)',lowtemp_cool:'低温(冷)'};
-    var storeLabels={temp_check:'温度表',delivery:'納品',toilet_open:'便(開)',toilet_mid:'便(中)',toilet_close:'便(閉)',food_temp:'食品温'};
+    var photoLabels={open:'オープン写真',close:'クローズ写真',lowtemp_temp:'低温調理（温度）',lowtemp_cool:'低温調理（冷却）',lowtemp_none:'低温（該当なし）',grooming:'身だしなみ'};
+    var storeLabels={temp_check:'温度記録',delivery:'納品チェック',toilet_open:'トイレ(開店)',toilet_mid:'トイレ(営業中)',toilet_close:'トイレ(閉店)',food_temp:'食品温度'};
     var rows = allStores.map(function(store){
       var spr=pr.filter(function(r){return r.store_id===store.id;});
       var ssr=sr.filter(function(r){return r.store_id===store.id;});
@@ -535,8 +535,12 @@ async function loadToday() {
           '<div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--text3)">📸 写真報告</div>'+
           photoTypes.map(function(t){
             var r=spr.find(function(x){return x.report_type===t;});
-            return '<div class="dr"><div class="dr-icon">'+(r?'✅':'⭕')+'</div><div class="dr-text">'+(photoLabels[t]||t)+'</div>'+
-              '<div class="dr-badge '+(r?'dr-ok':'dr-gray')+'">'+(r?'提出済':'未提出')+'</div></div>';
+            if(!r) return '<div class="dr"><div class="dr-icon">⭕</div><div class="dr-text">'+(photoLabels[t]||t)+'</div><div class="dr-badge dr-gray">未提出</div></div>';
+            var ai=r.ai_summary;
+            if(!ai) return '<div class="dr"><div class="dr-icon">✅</div><div class="dr-text">'+(photoLabels[t]||t)+'</div><div class="dr-badge dr-ok">監査待ち</div></div>';
+            var bc=ai.overall==='OK'?'dr-ok':ai.overall==='WARNING'?'dr-warn':'dr-ng';
+            var ic=ai.overall==='OK'?'✅':ai.overall==='WARNING'?'⚠️':'🚨';
+            return '<div class="dr"><div class="dr-icon">'+ic+'</div><div class="dr-text">'+(photoLabels[t]||t)+' <b style="font-family:DM Sans,sans-serif">'+ai.score+'点</b></div><div class="dr-badge '+bc+'">'+ai.overall+'</div></div>';
           }).join('')+
           '<div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--text3)">👤 個人衛生</div>'+
           (sper.length>0?sper.map(function(p){
@@ -655,7 +659,7 @@ async function loadPhotos() {
     if (reports.length===0) { document.getElementById('photo-list').innerHTML='<div class="note n-warn">⚠️ この日の写真報告はありません</div>'; return; }
     var storeMap={};
     allStores.forEach(function(s){storeMap[s.id]=s.name;});
-    var typeLabel={open:'オープン写真報告',close:'クローズ写真報告',lowtemp_temp:'低温調理温度報告',lowtemp_cool:'低温調理冷却報告'};
+    var typeLabel={open:'オープン写真報告',close:'クローズ写真報告',lowtemp_temp:'低温調理（温度）報告',lowtemp_cool:'低温調理（冷却）報告',lowtemp_none:'低温調理（該当なし）',grooming:'身だしなみ報告'};
     var html='';
     reports.forEach(function(r){
       var photos=Array.isArray(r.photos)?r.photos:[];

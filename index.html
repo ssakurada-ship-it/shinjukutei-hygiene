@@ -1430,11 +1430,64 @@ function updateProgress() {
 // =====================================================
 // ダッシュボード
 // =====================================================
+var _typeJa = {
+  open:'オープン写真',close:'クローズ写真',
+  lowtemp_temp:'低温調理（温度）',lowtemp_cool:'低温調理（冷却）',lowtemp_none:'低温調理（該当なし）',
+  grooming:'身だしなみ'
+};
+function _tj(t) { return _typeJa[t] || t; }
+function _esc(s) { return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function _renderDashAudit(photoReports) {
+  if (!photoReports || photoReports.length === 0) {
+    return '<div class="sr-alert"><span style="color:var(--text3)">—</span>写真報告なし</div>';
+  }
+  var h = '';
+  photoReports.forEach(function(r) {
+    var ai = r.ai_summary;
+    var label = _tj(r.report_type);
+    if (!ai) {
+      h += '<div class="sr-alert"><span style="color:var(--ok)">✓</span>' + label + ' <span style="color:var(--text3);font-size:10px;margin-left:4px">監査待ち</span></div>';
+      return;
+    }
+    var color = ai.overall==='OK'?'var(--ok)':ai.overall==='WARNING'?'var(--warn)':'var(--ng)';
+    var ico = ai.overall==='OK'?'✅':ai.overall==='WARNING'?'⚠️':'🚨';
+    h += '<div style="padding:8px 0;border-bottom:1px solid var(--border-light)">';
+    h += '<div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700">';
+    h += '<span>' + ico + '</span>';
+    h += '<span style="flex:1">' + label + '</span>';
+    h += '<span style="color:' + color + ';font-family:DM Sans,sans-serif;font-size:16px">' + ai.score + '<span style="font-size:10px;font-weight:400">点</span></span>';
+    h += '</div>';
+    // スロット別
+    if (ai.slot_results && ai.slot_results.length > 0) {
+      h += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">';
+      ai.slot_results.forEach(function(sr) {
+        var sc = sr.overall==='OK'?'background:var(--ok-bg);color:var(--ok)':sr.overall==='WARNING'?'background:var(--warn-bg);color:var(--warn)':'background:var(--ng-bg);color:var(--ng)';
+        var si = sr.overall==='OK'?'✓':sr.overall==='WARNING'?'△':'×';
+        h += '<span style="font-size:10px;padding:2px 7px;border-radius:5px;' + sc + '">' + si + ' ' + _esc(sr.slot||'') + ' ' + sr.score + '</span>';
+      });
+      h += '</div>';
+    }
+    // 問題点（最大3件）
+    if (ai.issues && ai.issues.length > 0) {
+      h += '<div style="margin-top:4px">';
+      ai.issues.slice(0, 3).forEach(function(iss) {
+        var ic = iss.level==='NG'?'🚨':'⚠️';
+        h += '<div style="font-size:10px;line-height:1.5;color:var(--text2);padding:1px 0">' + ic + ' ' + _esc(iss.item) + ': ' + _esc(iss.detail) + '</div>';
+      });
+      if (ai.issues.length > 3) h += '<div style="font-size:10px;color:var(--text3)">…他' + (ai.issues.length - 3) + '件</div>';
+      h += '</div>';
+    }
+    h += '</div>';
+  });
+  return h;
+}
+
 async function loadDashboard() {
   try {
     const today = new Date().toISOString().split('T')[0];
     const { data: stores } = await sb.from('stores').select('id,name').eq('is_active', true);
-    const { data: photoRep } = await sb.from('photo_reports').select('store_id,report_type,status').eq('report_date', today);
+    const { data: photoRep } = await sb.from('photo_reports').select('store_id,report_type,status,ai_summary').eq('report_date', today);
     const { data: storeRep } = await sb.from('store_reports').select('store_id,report_type').eq('report_date', today);
     const { data: personalRep } = await sb.from('personal_hygiene').select('store_id,staff_name,grooming,health').eq('report_date', today);
     const { data: allStaff } = await sb.from('staff').select('id,store_id,name').eq('is_active', true);
@@ -1460,7 +1513,7 @@ async function loadDashboard() {
       });
       var completedStaff = staffStatus.filter(function(s) { return s.complete; }).length;
 
-      return { store: store, hasPhoto: hasPhoto, hasStore: hasStore, hasPer: hasPer, hasNG: hasNG, staffStatus: staffStatus, completedStaff: completedStaff, totalStaff: storeStaff.length };
+      return { store: store, hasPhoto: hasPhoto, hasStore: hasStore, hasPer: hasPer, hasNG: hasNG, staffStatus: staffStatus, completedStaff: completedStaff, totalStaff: storeStaff.length, photoReports: pr };
     });
 
     document.getElementById('dash-rate').textContent = Math.round(submitted/stores.length*100) + '%';
@@ -1495,8 +1548,8 @@ async function loadDashboard() {
           '</div>' +
         '</div>' +
         '<div class="sr-body">' +
-          '<div class="sr-alert"><span style="color:' + (item.hasPhoto ? 'var(--ok)' : 'var(--text3)') + '">' + (item.hasPhoto ? '✓' : '—') + '</span>写真報告</div>' +
-          '<div class="sr-alert"><span style="color:' + (item.hasStore ? 'var(--ok)' : 'var(--text3)') + '">' + (item.hasStore ? '✓' : '—') + '</span>店舗全体</div>' +
+          _renderDashAudit(item.photoReports) +
+          '<div class="sr-alert"><span style="color:' + (item.hasStore ? 'var(--ok)' : 'var(--text3)') + '">' + (item.hasStore ? '✓' : '—') + '</span>店舗全体チェック</div>' +
           '<div style="padding:8px 0 4px;font-size:12px;font-weight:700;color:var(--text2)">個人衛生 (' + item.completedStaff + '/' + item.totalStaff + '人完了)</div>' +
           staffHtml +
         '</div>' +

@@ -337,7 +337,7 @@ body{font-family:'Zen Kaku Gothic New','Hiragino Sans',sans-serif;background:var
   <div id="cat-store" class="sa" style="display:none">
     <div class="note n-warn">⚠️ 責任者が管理・入力してください</div>
     <div class="prog-card">
-      <div class="prog-lbl"><span>店舗全体 進捗</span><span id="prog-store-lbl" style="font-weight:700">0 / 4</span></div>
+      <div class="prog-lbl"><span>店舗全体 進捗</span><span id="prog-store-lbl" style="font-weight:700">0 / 6</span></div>
       <div class="prog-track"><div class="prog-fill" id="prog-store" style="width:0%;background:linear-gradient(90deg,var(--store),#F59E0B)"></div></div>
     </div>
     <div class="menu-item" id="mi-tempcheck" onclick="showScreen('s-tempcheck')">
@@ -969,21 +969,26 @@ async function loadTodayProgress() {
 function markMenuItem(id, byOther) {
   var el = document.getElementById(id);
   if (!el) return;
+  // カード全体の見た目を変更
+  el.classList.add('mi-done');
   var right = el.querySelector('.mi-right');
   if (right) {
     right.textContent = '✓';
-    right.style.color = 'var(--ok)';
-    if (byOther) {
-      right.style.fontWeight = '400';
-      right.style.fontSize = '11px';
-      // 「他スタッフ提出済」をサブテキストに追記（重複防止）
-      var subEl = el.querySelector('.mi-sub');
-      if (subEl && subEl.textContent.indexOf('他スタッフ提出済') < 0) {
-        subEl.textContent += '（他スタッフ提出済）';
-      }
-    } else {
-      right.style.fontWeight = '700';
-      right.style.fontSize = '';
+    right.style.color = '#fff';
+    right.style.background = 'var(--ok)';
+    right.style.fontWeight = '700';
+    right.style.fontSize = '14px';
+  }
+  if (byOther) {
+    // 他スタッフ提出の場合はサブテキストに明記
+    var subEl = el.querySelector('.mi-sub');
+    if (subEl && subEl.textContent.indexOf('報告済') < 0) {
+      subEl.innerHTML += '<span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--ok-bg);color:var(--ok);font-size:10px;font-weight:700">他スタッフ報告済</span>';
+    }
+  } else {
+    var subEl2 = el.querySelector('.mi-sub');
+    if (subEl2 && subEl2.textContent.indexOf('報告済') < 0) {
+      subEl2.innerHTML += '<span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--ok-bg);color:var(--ok);font-size:10px;font-weight:700">報告済 ✓</span>';
     }
   }
 }
